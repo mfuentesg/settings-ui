@@ -1,0 +1,12 @@
+[
+    {
+        "id": "preferences",
+        "children": [
+            {
+                "caption": "Settings UI",
+                "id": "settings-ui",
+                "command": "settings_ui_open"
+            }
+        ]
+    }
+]

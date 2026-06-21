@@ -1,0 +1,101 @@
+"""
+Settings UI for Sublime Text 4 — plugin entry point.
+
+Responsibilities
+----------------
+* Declare the sublime_plugin command and event-listener classes that Sublime
+  Text discovers automatically by scanning this file.
+* Implement plugin_loaded() / plugin_unloaded() lifecycle hooks for auto-reload.
+* Delegate all real work to panel.py and the other modules.
+
+Install: symlink or copy this directory to
+         ~/Library/Application Support/Sublime Text/Packages/SettingsUI/
+
+Usage (Command Palette): Preferences: Settings UI
+      (Console)        : sublime.active_window().run_command("settings_ui_open")
+"""
+
+import sublime
+import sublime_plugin
+from . import panel, state, prefs, schema_loader
+
+
+# ---------------------------------------------------------------------------
+# Commands
+# ---------------------------------------------------------------------------
+
+class SettingsUiOpenCommand(sublime_plugin.WindowCommand):
+    """Open the Settings UI in a dedicated two-pane window."""
+
+    def run(self) -> None:
+        # Create a fresh window so we never interfere with the user's work.
+        sublime.run_command("new_window")
+        win = sublime.active_window()
+
+        # Left column (28 %) = navigation sidebar
+        # Right column (72 %) = scrollable settings content
+        win.set_layout({
+            "cols":  [0.0, 0.28, 1.0],
+            "rows":  [0.0, 1.0],
+            "cells": [[0, 0, 1, 1], [1, 0, 2, 1]],
+        })
+        win.set_tabs_visible(False)
+        win.set_status_bar_visible(False)
+        win.set_sidebar_visible(False)
+        win.set_minimap_visible(False)
+
+        panel.render()
+
+
+# ---------------------------------------------------------------------------
+# Event listeners
+# ---------------------------------------------------------------------------
+
+class SettingsUiSyncListener(sublime_plugin.EventListener):
+    """Start the scroll-sync poll whenever the user focuses a settings pane."""
+
+    def on_activated(self, view: sublime.View) -> None:
+        if (view.settings().get(panel.CONTENT_MARK)
+                or view.settings().get(panel.NAV_MARK)):
+            panel._start_poll()
+
+
+# ---------------------------------------------------------------------------
+# Plugin lifecycle
+# ---------------------------------------------------------------------------
+
+def plugin_loaded() -> None:
+    """
+    Called by Sublime Text when the package is first loaded *and* every time
+    a .py file in the package is saved (auto-reload).
+
+    If the settings window is already open (from a previous session or from
+    the current session before the save), re-render it in place so changes
+    to the code / CSS are immediately visible without reopening the window.
+    """
+    win = panel.get_active_settings_window()
+    if win:
+        panel._ensure_prefs_listener()
+        panel.render()
+        active = win.active_view()
+        if active and (
+            active.settings().get(panel.CONTENT_MARK)
+            or active.settings().get(panel.NAV_MARK)
+        ):
+            panel._start_poll()
+
+
+def plugin_unloaded() -> None:
+    """
+    Called just before the package is unloaded (on save / disable / quit).
+
+    Clears all listeners and resets every flag so plugin_loaded() can
+    re-initialise from a clean slate after the hot-reload.
+    """
+    prefs.prefs().clear_on_change("settings_ui")
+    panel.reset_module_state()
+    # Reset shared state so filter/category don't bleed across reloads.
+    state._filter   = ""
+    state._category = 0
+    # Force schema re-parse so any new ST defaults are picked up.
+    schema_loader._schema_loaded = False
