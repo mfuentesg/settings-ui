@@ -97,6 +97,11 @@ def plugin_loaded() -> None:
             or active.settings().get(panel.NAV_MARK)
         ):
             panel._start_poll()
+        return
+
+    plugin_settings = sublime.load_settings("SettingsUI.sublime-settings")
+    if plugin_settings.get("open_on_startup", False):
+        sublime.active_window().run_command("settings_ui_open")
 
 
 def plugin_unloaded() -> None:

@@ -1,0 +1,4 @@
+{
+    // Open the Settings UI automatically when Sublime Text starts.
+    "open_on_startup": false
+}
