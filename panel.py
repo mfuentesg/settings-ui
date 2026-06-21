@@ -345,4 +345,12 @@ def _open_raw_config() -> None:
             return
     v = win.open_file(path)
     win.set_view_index(v, 1, 0)
-    v.assign_syntax("Packages/JavaScript/JSON.sublime-syntax")
+    _assign_json_syntax(v)
+
+
+def _assign_json_syntax(view: sublime.View) -> None:
+    """Assign JSON syntax once the view finishes loading."""
+    if view.is_loading():
+        sublime.set_timeout(lambda: _assign_json_syntax(view), 50)
+    else:
+        view.assign_syntax("Packages/JavaScript/JSON.sublime-syntax")
