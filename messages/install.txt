@@ -1,0 +1,15 @@
+SettingsUI for Sublime Text 4
+==============================
+
+Thanks for installing SettingsUI!
+
+Open the visual settings editor any time:
+  • Menu: Preferences → Settings UI
+  • Command Palette: "Preferences: Settings UI"
+  • Keyboard: Cmd+, (macOS) / Ctrl+, (Windows / Linux)
+
+The panel matches your active color scheme automatically.
+Use "{ } Raw Config" in the left nav to view or edit
+settings that aren't yet covered by the UI.
+
+Report issues: https://github.com/mfuentesg/settings-ui
