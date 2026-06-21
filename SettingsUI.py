@@ -28,12 +28,14 @@ class SettingsUiOpenCommand(sublime_plugin.WindowCommand):
     """Open the Settings UI in a dedicated two-pane window."""
 
     def run(self) -> None:
-        # Create a fresh window so we never interfere with the user's work.
+        existing = panel.get_active_settings_window()
+        if existing:
+            existing.bring_to_front()
+            return
+
         sublime.run_command("new_window")
         win = sublime.active_window()
 
-        # Left column (28 %) = navigation sidebar
-        # Right column (72 %) = scrollable settings content
         win.set_layout({
             "cols":  [0.0, 0.28, 1.0],
             "rows":  [0.0, 1.0],
@@ -58,6 +60,15 @@ class SettingsUiSyncListener(sublime_plugin.EventListener):
         if (view.settings().get(panel.CONTENT_MARK)
                 or view.settings().get(panel.NAV_MARK)):
             panel._start_poll()
+
+
+class SettingsUiCloseListener(sublime_plugin.EventListener):
+    """Reset module state when the settings window is closed."""
+
+    def on_close(self, view: sublime.View) -> None:
+        if (view.settings().get(panel.CONTENT_MARK)
+                or view.settings().get(panel.NAV_MARK)):
+            panel.reset_module_state()
 
 
 # ---------------------------------------------------------------------------
