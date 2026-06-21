@@ -30,6 +30,8 @@ class SettingsUiOpenCommand(sublime_plugin.WindowCommand):
     def run(self) -> None:
         existing = panel.get_active_settings_window()
         if existing:
+            # bring_to_front() cannot cross macOS Spaces; user may be taken to
+            # the Space where the settings window lives.
             existing.bring_to_front()
             return
 
@@ -68,7 +70,8 @@ class SettingsUiCloseListener(sublime_plugin.EventListener):
     def on_close(self, view: sublime.View) -> None:
         if (view.settings().get(panel.CONTENT_MARK)
                 or view.settings().get(panel.NAV_MARK)):
-            panel.reset_module_state()
+            if panel.get_active_settings_window() is None:
+                panel.reset_module_state()
 
 
 # ---------------------------------------------------------------------------
