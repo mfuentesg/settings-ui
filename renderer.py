@@ -39,6 +39,10 @@ CSS = """
     .navreset { display: block; text-decoration: none; color: var(--bluish);
                 font-size: 12px; padding: 6px 10px; margin-top: 16px;
                 border-top: 1px solid color(var(--foreground) alpha(0.12)); }
+    .rawlink { display: block; text-decoration: none; color: var(--bluish);
+               font-size: 12px; padding: 6px 10px; margin-bottom: 12px;
+               border: 1px solid color(var(--bluish) alpha(0.35));
+               border-radius: 5px; text-align: center; }
 
     .content { display: inline-block; width: 700px; vertical-align: top;
                margin-left: 26px; }
@@ -313,7 +317,11 @@ def _wrap(inner: str, extra_style: str = "") -> str:
 
 def build_nav_html(sections: list, filter_text: str, category_index: int) -> str:
     """Build the full HTML string for the navigation sidebar."""
-    parts = ['<div class="nav"><span class="navhead">SETTINGS</span>']
+    parts = [
+        '<div class="nav">',
+        '<a class="rawlink" href="action:raw_config">{ } Raw Config</a>',
+        '<span class="navhead">SETTINGS</span>',
+    ]
     for i, (title, _entries) in enumerate(sections):
         active = not filter_text and i == category_index
         parts.append(
