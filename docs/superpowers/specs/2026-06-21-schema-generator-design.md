@@ -119,6 +119,33 @@ Priority order:
 
 3. **Unmapped** → `OTHER`
 
+## Settings Lifecycle & Event Handlers
+
+ST's API is unavailable at module import time. `sublime.load_resource()` and
+`sublime.load_settings()` may only be called from `plugin_loaded()` onward.
+
+**Generator command:** `run()` executes after `plugin_loaded()` by ST's plugin system —
+`load_resource()` is always safe there. The prefs file is ~50KB; no stutter risk.
+
+**Startup sequence (runtime):**
+```
+plugin_loaded()
+  └─ panel.render()
+       └─ schema_loader.ensure_schema_loaded()   ← safe: post-load
+            ├─ load_resource(Default/Preferences…) → patch defaults
+            └─ auto-generate OTHER entries for unknown keys
+```
+
+**Reactive schema patching:** `schema_loader.py` should register
+`Preferences.sublime-settings` via `add_on_change("settings_ui_schema", callback)`
+so that if ST updates the prefs file at runtime (e.g. after an ST update installs), the
+schema defaults are re-patched without requiring a full plugin reload. The existing
+`_schema_loaded = False` reset in `plugin_unloaded()` already handles hot-reload
+correctly; this adds coverage for in-session updates.
+
+`clear_on_change("settings_ui_schema")` must be called in `plugin_unloaded()` to
+avoid stale listeners.
+
 ## Runtime Fallback
 
 `schema_loader.py` remains unchanged in role: it patches real defaults into curated
