@@ -235,18 +235,38 @@ def open_list_picker(key: str) -> None:
     """
     Show a quick-panel backed by a named provider.
 
-    The provider is called in a background thread so font enumeration doesn't
-    block the UI.
+    If the provider result is cached, the panel opens immediately.
+    Otherwise a placeholder panel is shown while fonts load in the
+    background; when done the placeholder is replaced with the real list.
+    If the user dismisses the placeholder, the real panel is suppressed.
     """
     en = schema.KEY_INDEX[key]
     provider = PROVIDERS.get(en.get("provider"))
     if provider is None:
         return
-    sublime.status_message("Settings UI: loading %s\u2026" % en.get("provider"))
+
+    if _font_cache is not None:
+        _show_list_picker(key, _font_cache)
+        return
+
+    win = sublime.active_window()
+    dismissed = [False]
+
+    def on_loading_done(idx: int) -> None:
+        dismissed[0] = True
+
+    win.show_quick_panel([u"\u23f3  Scanning fonts\u2026"], on_loading_done)
 
     def work() -> None:
         items = provider()
-        sublime.set_timeout(lambda: _show_list_picker(key, items), 0)
+
+        def show() -> None:
+            if dismissed[0]:
+                return
+            win.run_command("hide_overlay")
+            _show_list_picker(key, items)
+
+        sublime.set_timeout(show, 0)
 
     threading.Thread(target=work, daemon=True).start()
 
