@@ -24,9 +24,7 @@ from . import schema, prefs
 # ---------------------------------------------------------------------------
 
 CSS = """
-    body { background-color: var(--background); }
-
-    .shell { background-color: var(--background); padding: 20px 24px 50px 24px; }
+    .shell { padding: 20px 24px 50px 24px; }
     .nav { display: inline-block; width: 196px; vertical-align: top; }
     .navhead { display: block; color: color(var(--foreground) alpha(0.45));
                font-size: 11px; font-weight: 700; letter-spacing: 0.6px;
