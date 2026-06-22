@@ -135,3 +135,38 @@ class TestInferEntry:
     def test_title_derived_from_key(self):
         e = schema_gen.infer_entry("some_setting_key", True, "")
         assert e["title"] == "Some Setting Key"
+
+
+class TestAssignSection:
+    def test_section_map_overrides_prefix(self):
+        assert schema_gen.assign_section("file_tab_style",
+                                         {"file_tab_style": "APPEARANCE › THEME"},
+                                         schema_gen._PREFIX_RULES) == "APPEARANCE › THEME"
+
+    def test_prefix_auto_complete(self):
+        assert schema_gen.assign_section("auto_complete_delay", {},
+                                         schema_gen._PREFIX_RULES) == "EDITOR › COMPLETION"
+
+    def test_prefix_find(self):
+        assert schema_gen.assign_section("find_selected_text", {},
+                                         schema_gen._PREFIX_RULES) == "EDITOR › FIND"
+
+    def test_prefix_show_falls_back_to_status_bar(self):
+        assert schema_gen.assign_section("show_encoding", {},
+                                         schema_gen._PREFIX_RULES) == "STATUS BAR"
+
+    def test_unmapped_goes_to_other(self):
+        assert schema_gen.assign_section("unknown_setting", {},
+                                         schema_gen._PREFIX_RULES) == "OTHER"
+
+    def test_prefix_vintage(self):
+        assert schema_gen.assign_section("vintage_start_in_command_mode", {},
+                                         schema_gen._PREFIX_RULES) == "PACKAGES › VINTAGE"
+
+    def test_prefix_font(self):
+        assert schema_gen.assign_section("font_size", {},
+                                         schema_gen._PREFIX_RULES) == "APPEARANCE › FONT"
+
+    def test_prefix_index(self):
+        assert schema_gen.assign_section("index_files", {},
+                                         schema_gen._PREFIX_RULES) == "FILES › INDEXING & SIDEBAR"

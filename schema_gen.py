@@ -78,3 +78,56 @@ def infer_entry(key: str, default, desc: str) -> dict:
     if isinstance(default, str):
         return dict(base, type="string", presets=None)
     return dict(base, type="json")
+
+
+_PREFIX_RULES = [
+    ("auto_complete_",     "EDITOR › COMPLETION"),
+    ("line_padding_",      "EDITOR › CARET & LINE"),
+    ("control_character_", "EDITOR › WHITE SPACE"),
+    ("ensure_newline_",    "FILES › SAVE"),
+    ("auto_hide_",         "UI › AUTO HIDE"),
+    ("hide_pointer_",      "UI › AUTO HIDE"),
+    ("auto_indent",        "EDITOR › INDENTATION"),
+    ("smart_indent",       "EDITOR › INDENTATION"),
+    ("indent_",            "EDITOR › INDENTATION"),
+    ("shift_tab_",         "EDITOR › INDENTATION"),
+    ("translate_",         "EDITOR › INDENTATION"),
+    ("detect_",            "EDITOR › INDENTATION"),
+    ("tab_size",           "EDITOR › INDENTATION"),
+    ("find_",              "EDITOR › FIND"),
+    ("font_",              "APPEARANCE › FONT"),
+    ("scroll_",            "EDITOR › SCROLLING"),
+    ("match_",             "EDITOR › BRACKETS & TAGS"),
+    ("caret_",             "EDITOR › CARET & LINE"),
+    ("ruler_",             "EDITOR › RULERS"),
+    ("index_",             "FILES › INDEXING & SIDEBAR"),
+    ("goto_",              "FILES › INDEXING & SIDEBAR"),
+    ("folder_",            "FILES › INDEXING & SIDEBAR"),
+    ("file_",              "FILES › INDEXING & SIDEBAR"),
+    ("binary_",            "FILES › INDEXING & SIDEBAR"),
+    ("image_",             "FILES › INDEXING & SIDEBAR"),
+    ("trim_",              "FILES › SAVE"),
+    ("save_",              "FILES › SAVE"),
+    ("vintage_",           "PACKAGES › VINTAGE"),
+    ("word_",              "EDITOR › WORD WRAP"),
+    ("wrap_",              "EDITOR › WORD WRAP"),
+    ("draw_",              "EDITOR › WHITE SPACE"),
+    ("spell_check",        "EDITOR › SPELL CHECK"),
+    ("spelling_",          "EDITOR › SPELL CHECK"),
+    ("dictionary",         "EDITOR › SPELL CHECK"),
+    ("reveal_",            "UI › AUTO HIDE"),
+    ("show_",              "STATUS BAR"),
+]
+
+
+def assign_section(key: str, section_map: dict, prefix_rules: list) -> str:
+    """Return the section title for key.
+
+    Priority: section_map exact match > prefix_rules (first match wins) > 'OTHER'.
+    """
+    if key in section_map:
+        return section_map[key]
+    for prefix, section in prefix_rules:
+        if key == prefix or key.startswith(prefix):
+            return section
+    return "OTHER"
