@@ -48,6 +48,12 @@ class SettingsUiOpenCommand(sublime_plugin.WindowCommand):
         win.set_sidebar_visible(False)
         win.set_minimap_visible(False)
 
+        # Create views and set their marks before render() scans for them.
+        # render_nav/render_content both call get_active_settings_window()
+        # which looks for CONTENT_MARK — if marks aren't set first, both
+        # functions exit early and no phantoms are created.
+        panel.get_nav_view(win)
+        panel.get_content_view(win)
         panel.render()
 
 
