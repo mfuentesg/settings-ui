@@ -19,6 +19,13 @@ class TestStripJsoncComments:
     def test_empty_string(self):
         assert schema_gen.strip_jsonc_comments("") == ""
 
+    def test_strips_double_slash_in_string_value(self):
+        # Known limitation: // inside strings is treated as a comment.
+        # This is acceptable for ST prefs files which don't embed // in values.
+        text = '{"note": "see foo // bar"}'
+        result = schema_gen.strip_jsonc_comments(text)
+        assert "// bar" not in result
+
 
 class TestParseDescriptions:
     def test_extracts_single_comment(self):

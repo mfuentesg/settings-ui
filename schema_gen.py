@@ -2,13 +2,18 @@
 Pure schema generation logic. No Sublime Text imports — fully testable outside ST.
 """
 import re
-import json
 
 _KEY_LINE = re.compile(r'^"([^"\\]+)"\s*:')
 
 
 def strip_jsonc_comments(text: str) -> str:
-    """Remove // line comments, preserving :// in URLs."""
+    """Remove // line comments, preserving :// in URLs.
+
+    Heuristic: protects '://' patterns but will incorrectly strip '//'
+    inside string values (e.g. {"note": "see // this"}). Safe for
+    Sublime Text's Default/Preferences.sublime-settings which contains
+    no double-slash inside string values.
+    """
     lines = []
     for line in text.splitlines():
         lines.append(re.sub(r'(?<!:)//.*$', '', line))
