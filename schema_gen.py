@@ -131,3 +131,37 @@ def assign_section(key: str, section_map: dict, prefix_rules: list) -> str:
         if key == prefix or key.startswith(prefix):
             return section
     return "OTHER"
+
+
+def build_sections(prefs_data: list, existing_sections: list, section_map: dict) -> dict:
+    """Build ordered {section_title: [entry_dict, ...]} from prefs_data.
+
+    prefs_data:        list of (key, default, desc) in prefs file order
+    existing_sections: list of (title, [entry_dict, ...]) from schema.SECTIONS
+    section_map:       dict key→section override (from section_map.json)
+
+    Existing entries are preserved verbatim; new keys get inferred entries.
+    Existing section order is maintained; new sections are appended.
+    """
+    existing_entry = {}
+    existing_key_section = {}
+    for title, entries in existing_sections:
+        for entry in entries:
+            existing_entry[entry["key"]] = entry
+            existing_key_section[entry["key"]] = title
+
+    result = {}
+    for title, _ in existing_sections:
+        result[title] = []
+
+    for key, default, desc in prefs_data:
+        if key in existing_entry:
+            section = existing_key_section[key]
+            result[section].append(existing_entry[key])
+        else:
+            section = assign_section(key, section_map, _PREFIX_RULES)
+            if section not in result:
+                result[section] = []
+            result[section].append(infer_entry(key, default, desc))
+
+    return {k: v for k, v in result.items() if v}

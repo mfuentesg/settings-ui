@@ -170,3 +170,45 @@ class TestAssignSection:
     def test_prefix_index(self):
         assert schema_gen.assign_section("index_files", {},
                                          schema_gen._PREFIX_RULES) == "FILES › INDEXING & SIDEBAR"
+
+
+class TestBuildSections:
+    def _existing(self):
+        return [
+            ("APPEARANCE › FONT", [
+                {"key": "font_size", "title": "Font Size", "desc": "Curated.",
+                 "type": "number", "default": 10, "presets": [10, 12], "step": 1, "is_float": False},
+            ]),
+        ]
+
+    def test_existing_entry_preserved(self):
+        prefs = [("font_size", 12, "From prefs.")]
+        result = schema_gen.build_sections(prefs, self._existing(), {})
+        assert result["APPEARANCE › FONT"][0]["desc"] == "Curated."
+
+    def test_existing_entry_in_existing_section(self):
+        prefs = [("font_size", 12, "")]
+        result = schema_gen.build_sections(prefs, self._existing(), {})
+        assert "APPEARANCE › FONT" in result
+
+    def test_new_key_inferred_and_assigned(self):
+        prefs = [("font_size", 12, ""), ("brand_new_key", True, "A new bool.")]
+        result = schema_gen.build_sections(prefs, self._existing(), {})
+        new_key_sections = [s for s, entries in result.items()
+                            if any(e["key"] == "brand_new_key" for e in entries)]
+        assert new_key_sections == ["OTHER"]
+        entry = next(e for e in result["OTHER"] if e["key"] == "brand_new_key")
+        assert entry["type"] == "bool"
+
+    def test_section_map_routes_new_key(self):
+        prefs = [("hot_exit", "always", "")]
+        section_map = {"hot_exit": "APPLICATION › BEHAVIOR"}
+        result = schema_gen.build_sections(prefs, [], section_map)
+        assert "APPLICATION › BEHAVIOR" in result
+        assert result["APPLICATION › BEHAVIOR"][0]["key"] == "hot_exit"
+
+    def test_existing_sections_appear_before_new(self):
+        prefs = [("font_size", 10, ""), ("unknown_key", True, "")]
+        result = schema_gen.build_sections(prefs, self._existing(), {})
+        keys = list(result.keys())
+        assert keys[0] == "APPEARANCE › FONT"
