@@ -7,7 +7,6 @@ together.  Nothing should import this module except SettingsUI.py (the entry
 point) and lazy closures inside pickers.py.
 """
 
-import os
 import sublime
 from . import schema, schema_loader, prefs, renderer, pickers, state
 
@@ -334,23 +333,7 @@ def reset_module_state() -> None:
 
 
 def _open_raw_config() -> None:
-    """Open Preferences.sublime-settings as an editable tab in group 1."""
-    win = get_active_settings_window()
-    if not win:
-        return
-    path = os.path.join(sublime.packages_path(), "User", "Preferences.sublime-settings")
-    for v in win.views():
-        if v.file_name() == path:
-            win.focus_view(v)
-            return
-    v = win.open_file(path)
-    win.set_view_index(v, 1, 0)
-    _assign_json_syntax(v)
-
-
-def _assign_json_syntax(view: sublime.View) -> None:
-    """Assign JSON syntax once the view finishes loading."""
-    if view.is_loading():
-        sublime.set_timeout(lambda: _assign_json_syntax(view), 50)
-    else:
-        view.assign_syntax("Packages/JavaScript/JSON.sublime-syntax")
+    """Open Preferences.sublime-settings via ST's native settings editor."""
+    sublime.run_command("edit_settings", {
+        "base_file": "${packages}/Default/Preferences.sublime-settings",
+    })

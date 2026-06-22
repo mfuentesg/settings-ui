@@ -71,7 +71,13 @@ class SettingsUiSyncListener(sublime_plugin.EventListener):
 
 
 class SettingsUiCloseListener(sublime_plugin.EventListener):
-    """Reset module state when the settings window is closed."""
+    """Protect the nav pane from closing; reset state when window closes."""
+
+    def on_pre_close(self, view: sublime.View) -> None:
+        if view.settings().get(panel.NAV_MARK):
+            # Nav view closing but content view still alive: recreate nav.
+            if panel.get_active_settings_window() is not None:
+                sublime.set_timeout(panel.render_nav, 50)
 
     def on_close(self, view: sublime.View) -> None:
         if (view.settings().get(panel.CONTENT_MARK)
