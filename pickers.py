@@ -20,7 +20,7 @@ from . import schema, prefs, state
 # Subprocess helper (used by font discovery)
 # ---------------------------------------------------------------------------
 
-def _run_cmd(args: list, timeout: int = 20) -> str | None:
+def _run_cmd(args: list, timeout: int = 20) -> "str | None":
     """Run a subprocess, return decoded stdout or None on failure."""
     try:
         p = subprocess.run(

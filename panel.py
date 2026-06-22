@@ -53,7 +53,7 @@ def _prep_view(view: sublime.View, mark: str) -> None:
     vs.set("fold_buttons",       False)
 
 
-def get_active_settings_window() -> sublime.Window | None:
+def get_active_settings_window() -> "sublime.Window | None":
     """Return the window that hosts the settings panes, or None."""
     for w in sublime.windows():
         for v in w.views():
