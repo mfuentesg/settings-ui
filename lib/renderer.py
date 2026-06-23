@@ -25,15 +25,20 @@ from . import schema, prefs
 
 CSS = """
     .shell { padding: 20px 24px 50px 24px; }
-    .nav { display: inline-block; width: 196px; vertical-align: top; }
-    .navhead { display: block; color: color(var(--foreground) alpha(0.45));
-               font-size: 11px; font-weight: 700; letter-spacing: 0.6px;
-               margin: 4px 0 12px 8px; }
-    .navitem { display: block; text-decoration: none; font-size: 12px;
-               color: color(var(--foreground) alpha(0.72)); padding: 6px 10px;
-               border-radius: 5px; margin-bottom: 1px; }
-    .navitem.active { background-color: color(var(--bluish) alpha(0.20));
-                      color: var(--foreground); }
+    .nav { display: block; }
+    .treegroup { display: block; color: color(var(--foreground) alpha(0.45));
+                 font-size: 10px; font-weight: 700; letter-spacing: 0.6px;
+                 margin: 16px 0 2px 8px; }
+    .treeleaf { display: block; text-decoration: none; font-size: 12px;
+                color: color(var(--foreground) alpha(0.72)); padding: 5px 8px 5px 20px;
+                border-radius: 5px; margin-bottom: 1px; }
+    .treeleaf.active { background-color: color(var(--bluish) alpha(0.20));
+                       color: var(--foreground); }
+    .treeroot { display: block; text-decoration: none; font-size: 12px;
+                color: color(var(--foreground) alpha(0.72)); padding: 6px 10px;
+                border-radius: 5px; margin-bottom: 1px; margin-top: 10px; }
+    .treeroot.active { background-color: color(var(--bluish) alpha(0.20));
+                       color: var(--foreground); }
     .navreset { display: block; text-decoration: none; color: var(--bluish);
                 font-size: 12px; padding: 6px 10px; margin-top: 16px;
                 border-top: 1px solid color(var(--foreground) alpha(0.12)); }
@@ -42,8 +47,7 @@ CSS = """
                border: 1px solid color(var(--bluish) alpha(0.35));
                border-radius: 5px; text-align: center; }
 
-    .content { display: inline-block; width: 700px; vertical-align: top;
-               margin-left: 26px; }
+    .content { display: block; }
     .h1 { display: block; color: var(--foreground); font-size: 24px; margin-bottom: 12px; }
     .search { display: block; background-color: color(var(--foreground) alpha(0.06));
               border: 1px solid color(var(--foreground) alpha(0.15)); border-radius: 5px;
@@ -56,10 +60,9 @@ CSS = """
 
     .section { display: block; color: color(var(--foreground) alpha(0.55));
                font-size: 11px; font-weight: 700; letter-spacing: 0.5px;
-               margin: 22px 0 2px 0; }
-    .item { display: block; text-decoration: none; border-left: 2px solid transparent;
-            padding: 11px 0 11px 14px; }
-    .item.modified { border-left: 2px solid var(--bluish); }
+               margin: 36px 0 6px 0; }
+    .item { display: block; text-decoration: none; padding: 20px 0 8px 14px;
+            background-color: transparent; }
     .title { display: block; color: var(--foreground); font-size: 14px;
              font-weight: 600; margin-bottom: 3px; }
     .desc { display: block; color: color(var(--foreground) alpha(0.55));
@@ -77,28 +80,35 @@ CSS = """
     .cbtitle { display: inline-block; vertical-align: middle; color: var(--foreground);
                font-size: 14px; font-weight: 600; }
 
-    .controls { display: block; margin-top: 8px; }
-    .radios { margin-top: 6px; }
-    .radio { display: block; text-decoration: none; padding: 5px 0; }
-    .rdot { display: inline-block; width: 16px; height: 16px; border-radius: 8px;
+    .controls { display: block; margin-top: 4px; }
+    .radios { margin-top: 10px; }
+    .radio { display: block; text-decoration: none; padding: 2px 0; }
+    .rdot { display: inline-block; width: 12px; height: 12px; border-radius: 10px;
             border: 2px solid color(var(--foreground) alpha(0.35));
-            vertical-align: middle; margin-right: 10px; text-align: center;
-            line-height: 16px; }
-    .rdot.on { border-color: var(--bluish); }
-    .rin { display: inline-block; width: 8px; height: 8px; border-radius: 4px;
-           background-color: var(--bluish); vertical-align: middle; }
+            vertical-align: middle; margin-right: 8px; position: relative; top: -1px; }
+    .rdot.on { border-color: var(--bluish); background-color: var(--bluish); }
     .rlabel { display: inline-block; vertical-align: middle; color: var(--foreground);
               font-size: 13px; }
-    .nstep { display: inline-block; height: 30px; line-height: 30px; padding: 0 13px;
-             text-align: center; background-color: color(var(--foreground) alpha(0.07));
-             border: 1px solid color(var(--foreground) alpha(0.15)); border-radius: 5px;
+    .nstep { display: inline-block; height: 28px; line-height: 28px; padding: 0 13px;
+             background-color: color(var(--foreground) alpha(0.07));
+             border-top: 1px solid color(var(--foreground) alpha(0.2));
+             border-bottom: 1px solid color(var(--foreground) alpha(0.2));
+             border-left: 1px solid color(var(--foreground) alpha(0.2));
+             border-right: none; border-radius: 0;
              color: var(--foreground); text-decoration: none; font-size: 13px;
-             font-weight: 600; margin-right: 6px; vertical-align: middle; }
-    .ninput { display: inline-block; height: 30px; line-height: 30px; padding: 0 16px;
-              text-align: center; background-color: color(var(--foreground) alpha(0.04));
-              border: 1px solid color(var(--foreground) alpha(0.22)); border-radius: 5px;
+             font-weight: 600; margin-right: 0; vertical-align: middle; }
+    .ndec { border-radius: 5px 0 0 5px; }
+    .ninc { border-right: 1px solid color(var(--foreground) alpha(0.2));
+            border-radius: 0 5px 5px 0; margin-right: 10px; }
+    .ninput { display: inline-block; height: 28px; line-height: 28px; padding: 0 18px;
+              background-color: color(var(--foreground) alpha(0.04));
+              border-top: 1px solid color(var(--foreground) alpha(0.2));
+              border-bottom: 1px solid color(var(--foreground) alpha(0.2));
+              border-left: 1px solid color(var(--foreground) alpha(0.15));
+              border-right: 1px solid color(var(--foreground) alpha(0.15));
+              border-radius: 0;
               color: var(--yellowish); text-decoration: none; font-size: 13px;
-              margin-right: 6px; vertical-align: middle; }
+              margin-right: 0; vertical-align: middle; }
     .val { display: inline-block; background-color: color(var(--foreground) alpha(0.05));
            border: 1px solid color(var(--foreground) alpha(0.15)); border-radius: 4px;
            padding: 4px 9px; color: var(--yellowish); font-size: 12px;
@@ -141,7 +151,7 @@ def r_enum(en: dict) -> str:
     rows = ""
     for i, (cv, lab) in enumerate(schema.norm_choices(en)):
         dot = (
-            '<span class="rdot on"><span class="rin"></span></span>'
+            '<span class="rdot on"></span>'
             if cv == val else '<span class="rdot"></span>'
         )
         rows += (
@@ -168,9 +178,9 @@ def r_number(en: dict) -> str:
     return (
         '<div class="item{m}"><span class="title">{t}</span>'
         '<span class="desc">{d}</span><div class="controls">'
-        '<a class="nstep" href="step:{k}:-1">{dec}</a>'
+        '<a class="nstep ndec" href="step:{k}:-1">{dec}</a>'
         '<a class="ninput" href="edit:{k}">{v}</a>'
-        '<a class="nstep" href="step:{k}:1">{inc}</a>'
+        '<a class="nstep ninc" href="step:{k}:1">{inc}</a>'
         '{r}</div></div>'
     ).format(
         m=" modified" if mod else "",
@@ -314,19 +324,50 @@ def _wrap(inner: str, extra_style: str = "") -> str:
 
 
 def build_nav_html(sections: list, filter_text: str, category_index: int) -> str:
-    """Build the full HTML string for the navigation sidebar."""
+    """Build the full HTML string for the navigation sidebar as a grouped tree."""
+    # Group sections by parent (text before ›); root items have no parent.
+    seen_keys = []
+    group_items = {}
+    for i, (title, _) in enumerate(sections):
+        if '›' in title:
+            group, _, leaf = title.partition(' › ')
+            key = group.strip()
+            leaf = leaf.strip()
+        else:
+            key = '__root_{0}__'.format(i)
+            leaf = title.strip()
+        if key not in group_items:
+            seen_keys.append(key)
+            group_items[key] = []
+        group_items[key].append((leaf, i))
+
     parts = [
         '<div class="nav">',
         '<a class="rawlink" href="action:raw_config">{ } Raw Config</a>',
-        '<span class="navhead">SETTINGS</span>',
     ]
-    for i, (title, _entries) in enumerate(sections):
-        active = not filter_text and i == category_index
-        parts.append(
-            '<a class="navitem{a}" href="cat:{i}">{t}</a>'.format(
-                a=" active" if active else "", i=i, t=schema.esc(title)
+    for key in seen_keys:
+        items = group_items[key]
+        if key.startswith('__root_'):
+            leaf, idx = items[0]
+            active = not filter_text and idx == category_index
+            parts.append(
+                '<a class="treeroot{a}" href="cat:{i}">{t}</a>'.format(
+                    a=' active' if active else '', i=idx,
+                    t=schema.esc(leaf.title())
+                )
             )
-        )
+        else:
+            parts.append(
+                '<span class="treegroup">{g}</span>'.format(g=schema.esc(key))
+            )
+            for (leaf, idx) in items:
+                active = not filter_text and idx == category_index
+                parts.append(
+                    '<a class="treeleaf{a}" href="cat:{i}">{t}</a>'.format(
+                        a=' active' if active else '', i=idx,
+                        t=schema.esc(leaf.title())
+                    )
+                )
     parts.append(
         '<a class="navreset" href="action:reset_all">Restore all defaults</a>'
     )
@@ -397,7 +438,7 @@ def build_content_phantoms(
         pt = view.text_point(line_idx, 0)
         phantoms.append(sublime.Phantom(
             sublime.Region(pt, pt),
-            _wrap("".join(parts), "padding-top: 0; padding-bottom: 0;"),
+            _wrap("".join(parts), "padding-top: 0; padding-bottom: 24px;"),
             sublime.LAYOUT_BLOCK,
             on_navigate=on_nav_callback,
         ))
@@ -417,7 +458,7 @@ def build_content_phantoms(
         ))
 
     # -- Footer spacer (ensures the last section can scroll to top) ------
-    footer = '<div style="height: 80vh;"></div>'
+    footer = '<div style="height: 300px;"></div>'
     pt = view.text_point(line_idx + (1 if filter_text and total_shown == 0 else 0), 0)
     phantoms.append(sublime.Phantom(
         sublime.Region(pt, pt),

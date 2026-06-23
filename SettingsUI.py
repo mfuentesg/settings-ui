@@ -17,7 +17,7 @@ Usage (Command Palette): Preferences: Settings UI
 
 import sublime
 import sublime_plugin
-from . import panel, state, prefs, schema_loader
+from .lib import panel, state, prefs, schema_loader
 
 
 # ---------------------------------------------------------------------------

@@ -10,11 +10,11 @@ and rewrites the SECTIONS block in schema.py. ST auto-reloads the plugin on save
 import os
 import sublime
 import sublime_plugin
-from . import schema as _schema
-from . import schema_gen
+from .lib import schema as _schema
+from .lib import schema_gen
 
 _TOOLS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools")
-_SCHEMA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "schema.py")
+_SCHEMA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "lib", "schema.py")
 
 
 def _load_prefs_data() -> list:
