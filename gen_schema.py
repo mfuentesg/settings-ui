@@ -85,8 +85,12 @@ class SettingsUiGenerateSchemaCommand(sublime_plugin.WindowCommand):
             sublime.error_message("Settings UI: %s" % ex)
             return
 
-        with open(_SCHEMA_PATH, "w", encoding="utf-8", newline="\n") as f:
-            f.write(new_source)
+        try:
+            with open(_SCHEMA_PATH, "w", encoding="utf-8", newline="\n") as f:
+                f.write(new_source)
+        except Exception as ex:
+            sublime.error_message("Settings UI: Failed to write schema.py\n%s" % ex)
+            return
 
         total_keys = sum(len(v) for v in sections.values())
         sublime.status_message(

@@ -10,31 +10,12 @@ Augments the curated SECTIONS catalogue in schema.py with:
 Call ensure_schema_loaded() once before first render.
 """
 
-import re
 import sublime
 from . import schema
-
-_KEY_LINE = re.compile(r'^"([^"\\]+)"\s*:')
+from . import schema_gen
 
 # Guards against re-loading on every render.
 _schema_loaded = False
-
-
-def _parse_descriptions(text: str) -> dict:
-    """Extract the comment above each JSON key as its description."""
-    desc, buf = {}, []
-    for raw in text.splitlines():
-        line = raw.strip()
-        if line.startswith("//"):
-            buf.append(line[2:].strip())
-        elif line == "":
-            buf = []
-        else:
-            m = _KEY_LINE.match(line)
-            if m and buf:
-                desc.setdefault(m.group(1), " ".join(x for x in buf if x))
-            buf = []
-    return desc
 
 
 def _load_default_prefs() -> tuple:
@@ -42,7 +23,8 @@ def _load_default_prefs() -> tuple:
     Load and merge Sublime's Default/Preferences files.
 
     Returns (defaults_dict, descriptions_dict).  The platform-specific file
-    is loaded last so its values take precedence.
+    is loaded last so its values take precedence; base-file descriptions win
+    (same policy as gen_schema._load_prefs_data).
     """
     plat = {"osx": "OSX", "windows": "Windows", "linux": "Linux"}.get(
         sublime.platform(), ""
@@ -63,7 +45,8 @@ def _load_default_prefs() -> tuple:
                 defaults.update(d)
         except Exception:
             pass
-        descs.update(_parse_descriptions(text))
+        for k, v in schema_gen.parse_descriptions(text).items():
+            descs.setdefault(k, v)
     return defaults, descs
 
 
@@ -115,6 +98,8 @@ def ensure_schema_loaded() -> None:
 
 def _repatch_defaults() -> None:
     """Re-patch schema defaults from current ST prefs. Safe to call repeatedly."""
+    if not _schema_loaded:
+        return
     try:
         defaults, _ = _load_default_prefs()
         for entry in schema.KEY_INDEX.values():
