@@ -165,3 +165,77 @@ def build_sections(prefs_data: list, existing_sections: list, section_map: dict)
             result[section].append(infer_entry(key, default, desc))
 
     return {k: v for k, v in result.items() if v}
+
+
+def entry_to_code(entry: dict) -> str:
+    """Serialize an entry dict to a Python helper call string."""
+    t = entry["type"]
+    k = repr(entry["key"])
+    ti = repr(entry["title"])
+    d = repr(entry["desc"])
+    df = repr(entry["default"])
+
+    if t == "bool":
+        return "b(%s, %s, %s, %s)" % (k, ti, d, df)
+    if t == "enum":
+        ch = repr(entry["choices"])
+        return "e(%s, %s, %s, %s, %s)" % (k, ti, d, df, ch)
+    if t == "number":
+        step = entry.get("step", 1)
+        is_float = entry.get("is_float", False)
+        presets = entry.get("presets")
+        extra = []
+        if presets is not None:
+            extra.append("presets=%s" % repr(presets))
+        if step != 1:
+            extra.append("step=%s" % repr(step))
+        if is_float:
+            extra.append("is_float=True")
+        args = ", ".join([k, ti, d, df] + extra)
+        return "n(%s)" % args
+    if t == "string":
+        presets = entry.get("presets")
+        if presets is not None:
+            return "s(%s, %s, %s, %s, presets=%s)" % (k, ti, d, df, repr(presets))
+        return "s(%s, %s, %s, %s)" % (k, ti, d, df)
+    if t == "json":
+        return "j(%s, %s, %s, %s)" % (k, ti, d, df)
+    if t == "picker":
+        cmd = repr(entry["cmd"])
+        return "pk(%s, %s, %s, %s, %s)" % (k, ti, d, df, cmd)
+    if t == "respick":
+        kind = repr(entry["kind"])
+        return "rp(%s, %s, %s, %s, %s)" % (k, ti, d, df, kind)
+    if t == "listpick":
+        provider = repr(entry["provider"])
+        return "lp(%s, %s, %s, %s, %s)" % (k, ti, d, df, provider)
+    return "j(%s, %s, %s, %s)" % (k, ti, d, df)
+
+
+def sections_to_code(sections: dict) -> str:
+    """Produce the SECTIONS = [...] Python block from an ordered section dict."""
+    lines = ["SECTIONS = ["]
+    for title, entries in sections.items():
+        lines.append("    (%s, [" % repr(title))
+        for entry in entries:
+            lines.append("        %s," % entry_to_code(entry))
+        lines.append("    ]),")
+    lines.append("]")
+    return "\n".join(lines)
+
+
+def replace_sections_block(source: str, new_sections_code: str) -> str:
+    """Replace the SECTIONS = [...] block in schema.py source with new_sections_code."""
+    marker = "SECTIONS = ["
+    start = source.find(marker)
+    if start == -1:
+        raise ValueError("'SECTIONS = [' not found in source")
+    depth = 1
+    i = start + len(marker)
+    while i < len(source) and depth > 0:
+        if source[i] == "[":
+            depth += 1
+        elif source[i] == "]":
+            depth -= 1
+        i += 1
+    return source[:start] + new_sections_code + source[i:]

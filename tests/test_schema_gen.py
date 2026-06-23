@@ -212,3 +212,95 @@ class TestBuildSections:
         result = schema_gen.build_sections(prefs, self._existing(), {})
         keys = list(result.keys())
         assert keys[0] == "APPEARANCE › FONT"
+
+
+class TestEntryToCode:
+    def test_bool(self):
+        e = {"key": "foo", "title": "Foo", "desc": "A foo.", "type": "bool", "default": True}
+        assert schema_gen.entry_to_code(e) == "b('foo', 'Foo', 'A foo.', True)"
+
+    def test_enum(self):
+        e = {"key": "k", "title": "K", "desc": "", "type": "enum",
+             "default": "a", "choices": ["a", "b"]}
+        assert schema_gen.entry_to_code(e) == "e('k', 'K', '', 'a', ['a', 'b'])"
+
+    def test_number_int(self):
+        e = {"key": "k", "title": "K", "desc": "", "type": "number",
+             "default": 4, "presets": None, "step": 1, "is_float": False}
+        assert schema_gen.entry_to_code(e) == "n('k', 'K', '', 4)"
+
+    def test_number_float_with_step(self):
+        e = {"key": "k", "title": "K", "desc": "", "type": "number",
+             "default": 1.0, "presets": None, "step": 0.5, "is_float": True}
+        assert schema_gen.entry_to_code(e) == "n('k', 'K', '', 1.0, step=0.5, is_float=True)"
+
+    def test_number_with_presets(self):
+        e = {"key": "k", "title": "K", "desc": "", "type": "number",
+             "default": 10, "presets": [10, 12, 14], "step": 1, "is_float": False}
+        assert schema_gen.entry_to_code(e) == "n('k', 'K', '', 10, presets=[10, 12, 14])"
+
+    def test_string(self):
+        e = {"key": "k", "title": "K", "desc": "", "type": "string",
+             "default": "UTF-8", "presets": None}
+        assert schema_gen.entry_to_code(e) == "s('k', 'K', '', 'UTF-8')"
+
+    def test_json(self):
+        e = {"key": "k", "title": "K", "desc": "", "type": "json", "default": []}
+        assert schema_gen.entry_to_code(e) == "j('k', 'K', '', [])"
+
+    def test_picker(self):
+        e = {"key": "color_scheme", "title": "Color Scheme", "desc": "",
+             "type": "picker", "default": "Mariana", "cmd": "select_color_scheme"}
+        assert schema_gen.entry_to_code(e) == \
+            "pk('color_scheme', 'Color Scheme', '', 'Mariana', 'select_color_scheme')"
+
+    def test_respick(self):
+        e = {"key": "light_color_scheme", "title": "Light Color Scheme", "desc": "",
+             "type": "respick", "default": "", "kind": "color_scheme"}
+        assert schema_gen.entry_to_code(e) == \
+            "rp('light_color_scheme', 'Light Color Scheme', '', '', 'color_scheme')"
+
+    def test_listpick(self):
+        e = {"key": "font_face", "title": "Font Face", "desc": "",
+             "type": "listpick", "default": "", "provider": "fonts"}
+        assert schema_gen.entry_to_code(e) == \
+            "lp('font_face', 'Font Face', '', '', 'fonts')"
+
+
+class TestSectionsToCode:
+    def test_produces_valid_python(self):
+        import ast
+        sections = {"SEC": [{"key": "k", "title": "K", "desc": "", "type": "bool", "default": True}]}
+        code = schema_gen.sections_to_code(sections)
+        assert code.startswith("SECTIONS = [")
+        ast.parse(code)
+
+    def test_empty_sections(self):
+        code = schema_gen.sections_to_code({})
+        assert code == "SECTIONS = [\n]"
+
+
+class TestReplaceSectionsBlock:
+    _source = (
+        'def b(): pass\n\nSECTIONS = [\n    ("A", []),\n]\n\nKEY_INDEX = {}\n'
+    )
+
+    def test_replaces_sections(self):
+        new_code = 'SECTIONS = [\n    ("B", []),\n]'
+        result = schema_gen.replace_sections_block(self._source, new_code)
+        assert "B" in result
+        assert "A" not in result
+
+    def test_preserves_preamble(self):
+        new_code = 'SECTIONS = [\n]'
+        result = schema_gen.replace_sections_block(self._source, new_code)
+        assert result.startswith("def b(): pass")
+
+    def test_preserves_postamble(self):
+        new_code = 'SECTIONS = [\n]'
+        result = schema_gen.replace_sections_block(self._source, new_code)
+        assert "KEY_INDEX = {}" in result
+
+    def test_raises_on_missing_marker(self):
+        with pytest.raises(ValueError):
+            schema_gen.replace_sections_block("no sections here", "SECTIONS = [\n]")
