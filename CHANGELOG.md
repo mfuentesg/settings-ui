@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.5.0] - 2026-06-23
+
+### Fixed
+- Added `edit_settings` command entry (`Preferences: SettingsUI Settings`) to the command palette
+- Added `Preferences → Package Settings → SettingsUI → Settings` menu entry to satisfy Package Control reviewer requirements
+
 ## [0.4.0] - 2026-06-23
 
 ### Changed

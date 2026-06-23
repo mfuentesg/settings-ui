@@ -16,7 +16,7 @@ A visual settings panel for Sublime Text 4 — browse and edit `Preferences.subl
 
 - **Two-pane layout** — category navigation on the left, settings on the right
 - **Grouped sections** — Appearance, Editor, Files, Search, and more
-- **Smart widgets** — toggles for booleans, radio buttons for enums, native pickers for color schemes, themes, and fonts
+- **Smart widgets** — toggles for booleans, radio buttons for enums, inline number editing, native pickers for color schemes, themes, and fonts
 - **Live search** — filter across all settings instantly
 - **Schema generator** — syncs the UI with new ST settings automatically via a single command
 - **Auto-reload** — re-renders the panel whenever you save a plugin file during development
@@ -47,7 +47,9 @@ Clone this repo into your Packages directory:
 
 ## Usage
 
-Open the command palette and run **Preferences: Settings UI**, or use the keyboard shortcut:
+Open the command palette and run **Preferences: Settings UI**.
+
+A keyboard shortcut is included as an example keymap (not active by default). To enable it, copy the binding from the example keymap file into your own keymap:
 
 | Platform | Shortcut |
 |----------|----------|
@@ -67,6 +69,7 @@ Edit via **Preferences → Package Settings → SettingsUI → Settings**.
 | Command | Description |
 |---------|-------------|
 | **Preferences: Settings UI** | Open the visual settings panel |
+| **Preferences: SettingsUI Settings** | Open the plugin settings file |
 | **Settings UI: Generate Schema** | Regenerate the schema from the current ST defaults |
 
 ## Requirements
