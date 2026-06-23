@@ -7,7 +7,6 @@ inside callback closures – the import only happens after both modules are
 fully loaded.
 """
 
-import json
 import os
 import subprocess
 import sys
@@ -75,28 +74,14 @@ def list_system_fonts() -> list:
 
     fams: set = set()
 
-    # Try fc-list (Linux / macOS with fontconfig)
-    out = _run_cmd(["fc-list", ":", "family"])
+    # Try fc-list (Linux / macOS with fontconfig); short timeout so failure is cheap
+    out = _run_cmd(["fc-list", ":", "family"], timeout=3)
     if out:
         for line in out.splitlines():
             for fam in line.split(","):
                 fam = fam.strip()
                 if fam:
                     fams.add(fam)
-
-    # macOS fallback via system_profiler
-    if not fams and sys.platform == "darwin":
-        out = _run_cmd(["system_profiler", "-json", "SPFontsDataType"])
-        if out:
-            try:
-                data = json.loads(out)
-                for entry in data.get("SPFontsDataType", []):
-                    for tf in entry.get("typefaces", []):
-                        fam = tf.get("family")
-                        if fam:
-                            fams.add(fam)
-            except Exception:
-                pass
 
     if not fams:
         fams.update(_scan_font_files())
@@ -280,6 +265,9 @@ def _show_list_picker(key: str, items: list) -> None:
     labels = [lab for lab, _v in items]
     cur_val = prefs.cur(key, en["default"])
     selected = next((i for i, (_l, v) in enumerate(items) if v == cur_val), -1)
+    if selected == -1 and cur_val:
+        cur_lower = cur_val.lower()
+        selected = next((i for i, (_l, v) in enumerate(items) if v.lower() == cur_lower), -1)
 
     def on_done(idx: int) -> None:
         if idx == -1:
