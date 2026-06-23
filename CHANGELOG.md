@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.4.0] - 2026-06-23
+
+### Changed
+- Number settings now use an inline edit link instead of a stepper widget
+- Fixed minihtml spacing issues in the content pane
+
+### Performance
+- Font picker scan is significantly faster; pre-selects the current active font
+
+## [0.3.0] - 2026-06-22
+
+### Fixed
+- Renamed active keymap files to `(Example)` variants to satisfy Package Control's
+  requirement that key bindings with no context use example files
+
+## [0.2.0] - 2026-06-22
+
+### Changed
+- Moved all helper modules into `lib/` subpackage to comply with Package Control's
+  plugin isolation rules (no root-level imports)
+- Added `.gitignore` to exclude `__pycache__` and compiled `.pyc` files
+- Added `README.md` for Package Control submission
+
 ## [0.1.0] - 2026-06-21
 
 ### Added
