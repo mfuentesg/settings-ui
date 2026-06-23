@@ -2,5 +2,9 @@
     {
         "caption": "Preferences: Settings UI",
         "command": "settings_ui_open"
+    },
+    {
+        "caption": "Settings UI: Generate Schema",
+        "command": "settings_ui_generate_schema"
     }
 ]
