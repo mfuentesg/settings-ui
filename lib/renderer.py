@@ -72,51 +72,34 @@ CSS = """
              font-size: 13px; padding: 22px 0; }
 
     .cb { display: inline-block; width: 16px; height: 16px; border-radius: 3px;
-          vertical-align: middle; margin-right: 9px; text-align: center; }
+          margin-right: 9px; text-align: center; }
     .cb.on  { background-color: var(--bluish); border: 1px solid var(--bluish); }
     .cb.off { background-color: color(var(--foreground) alpha(0.05));
               border: 1px solid color(var(--foreground) alpha(0.4)); }
     .ck { color: var(--background); font-size: 11px; font-weight: 700; line-height: 16px; }
-    .cbtitle { display: inline-block; vertical-align: middle; color: var(--foreground);
+    .cbtitle { display: inline-block; color: var(--foreground);
                font-size: 14px; font-weight: 600; }
 
-    .controls { display: block; margin-top: 4px; }
+    .controls { display: block; margin-top: 4px; font-size: 0; }
     .radios { margin-top: 10px; }
     .radio { display: block; text-decoration: none; padding: 2px 0; }
-    .rdot { display: inline-block; width: 12px; height: 12px; border-radius: 10px;
+    .rdot { display: inline-block; width: 14px; height: 14px;
+            border-top-left-radius: 7px; border-top-right-radius: 7px;
+            border-bottom-left-radius: 7px; border-bottom-right-radius: 7px;
             border: 2px solid color(var(--foreground) alpha(0.35));
-            vertical-align: middle; margin-right: 8px; position: relative; top: -1px; }
+            margin-right: 8px; position: relative; top: -1px; }
     .rdot.on { border-color: var(--bluish); background-color: var(--bluish); }
-    .rlabel { display: inline-block; vertical-align: middle; color: var(--foreground);
+    .rlabel { display: inline-block; color: var(--foreground);
               font-size: 13px; }
-    .nstep { display: inline-block; height: 28px; line-height: 28px; padding: 0 13px;
-             background-color: color(var(--foreground) alpha(0.07));
-             border-top: 1px solid color(var(--foreground) alpha(0.2));
-             border-bottom: 1px solid color(var(--foreground) alpha(0.2));
-             border-left: 1px solid color(var(--foreground) alpha(0.2));
-             border-right: none; border-radius: 0;
-             color: var(--foreground); text-decoration: none; font-size: 13px;
-             font-weight: 600; margin-right: 0; vertical-align: middle; }
-    .ndec { border-radius: 5px 0 0 5px; }
-    .ninc { border-right: 1px solid color(var(--foreground) alpha(0.2));
-            border-radius: 0 5px 5px 0; margin-right: 10px; }
-    .ninput { display: inline-block; height: 28px; line-height: 28px; padding: 0 18px;
-              background-color: color(var(--foreground) alpha(0.04));
-              border-top: 1px solid color(var(--foreground) alpha(0.2));
-              border-bottom: 1px solid color(var(--foreground) alpha(0.2));
-              border-left: 1px solid color(var(--foreground) alpha(0.15));
-              border-right: 1px solid color(var(--foreground) alpha(0.15));
-              border-radius: 0;
-              color: var(--yellowish); text-decoration: none; font-size: 13px;
-              margin-right: 0; vertical-align: middle; }
     .val { display: inline-block; background-color: color(var(--foreground) alpha(0.05));
            border: 1px solid color(var(--foreground) alpha(0.15)); border-radius: 4px;
            padding: 4px 9px; color: var(--yellowish); font-size: 12px;
-           margin-right: 8px; vertical-align: middle; }
-    .editlink, .selectlink { color: var(--bluish); text-decoration: none;
-                             font-size: 12px; vertical-align: middle; }
-    .resetlink { color: color(var(--foreground) alpha(0.5)); text-decoration: none;
-                 font-size: 12px; vertical-align: middle; }
+           margin-right: 8px; }
+    .editlink, .selectlink { display: inline-block; color: var(--bluish);
+                             text-decoration: none; font-size: 12px;
+                             margin-left: 8px; margin-right: 8px; }
+    .resetlink { display: inline-block; color: color(var(--foreground) alpha(0.5));
+                 text-decoration: none; font-size: 12px; }
     .footer { display: block; color: color(var(--foreground) alpha(0.4)); font-size: 12px;
               margin-top: 26px; border-top: 1px solid color(var(--foreground) alpha(0.12));
               padding-top: 12px; }
@@ -126,22 +109,29 @@ CSS = """
 # Per-type renderers  (return HTML fragment strings)
 # ---------------------------------------------------------------------------
 
+
 def _reset_link(key: str) -> str:
-    return '&#160;&#160;<a class="resetlink" href="reset:{k}">Reset</a>'.format(k=key)
+    return '<a class="resetlink" href="reset:{k}">Reset</a>'.format(k=key)
 
 
 def r_bool(en: dict) -> str:
     key, default = en["key"], en["default"]
     val = bool(prefs.cur(key, default))
-    cb = ('<div class="cb on"><span class="ck">&#10003;</span></div>'
-          if val else '<div class="cb off"></div>')
+    cb = (
+        '<div class="cb on"><span class="ck">&#10003;</span></div>'
+        if val
+        else '<div class="cb off"></div>'
+    )
     return (
         '<a class="item{m}" href="toggle:{k}">'
         '{cb}<span class="cbtitle">{t}</span>'
         '<span class="desc indent">{d}</span></a>'
     ).format(
-        m=" modified" if val != default else "", k=key, cb=cb,
-        t=schema.esc(en["title"]), d=schema.esc(en["desc"]),
+        m=" modified" if val != default else "",
+        k=key,
+        cb=cb,
+        t=schema.esc(en["title"]),
+        d=schema.esc(en["desc"]),
     )
 
 
@@ -152,7 +142,8 @@ def r_enum(en: dict) -> str:
     for i, (cv, lab) in enumerate(schema.norm_choices(en)):
         dot = (
             '<span class="rdot on"></span>'
-            if cv == val else '<span class="rdot"></span>'
+            if cv == val
+            else '<span class="rdot"></span>'
         )
         rows += (
             '<a class="radio" href="enum:{k}:{i}">'
@@ -164,7 +155,9 @@ def r_enum(en: dict) -> str:
         '<div class="controls radios">{r}</div></div>'
     ).format(
         m=" modified" if prefs.is_modified(en) else "",
-        t=schema.esc(en["title"]), d=schema.esc(en["desc"]), r=rows,
+        t=schema.esc(en["title"]),
+        d=schema.esc(en["desc"]),
+        r=rows,
     )
 
 
@@ -172,20 +165,20 @@ def r_number(en: dict) -> str:
     key = en["key"]
     val = prefs.cur(key, en["default"])
     mod = prefs.is_modified(en)
-    step = en.get("step", 1)
-    dec, inc = ("&#8722;1", "+1") if step == 1 else ("&#8722;", "+")
     reset = _reset_link(key) if mod else ""
     return (
         '<div class="item{m}"><span class="title">{t}</span>'
         '<span class="desc">{d}</span><div class="controls">'
-        '<a class="nstep ndec" href="step:{k}:-1">{dec}</a>'
-        '<a class="ninput" href="edit:{k}">{v}</a>'
-        '<a class="nstep ninc" href="step:{k}:1">{inc}</a>'
-        '{r}</div></div>'
+        '<span class="val">{v}</span>'
+        '<a class="editlink" href="edit:{k}">Edit&#8230;</a>'
+        "{r}</div></div>"
     ).format(
         m=" modified" if mod else "",
-        t=schema.esc(en["title"]), d=schema.esc(en["desc"]),
-        k=key, v=schema.esc(val), dec=dec, inc=inc, r=reset,
+        t=schema.esc(en["title"]),
+        d=schema.esc(en["desc"]),
+        k=key,
+        v=schema.esc(val),
+        r=reset,
     )
 
 
@@ -200,11 +193,14 @@ def r_string(en: dict) -> str:
         '<span class="desc">{d}</span><div class="controls">'
         '<span class="val">{v}</span>'
         '<a class="editlink" href="edit:{k}">Edit&#8230;</a>'
-        '{r}</div></div>'
+        "{r}</div></div>"
     ).format(
         m=" modified" if mod else "",
-        t=schema.esc(en["title"]), d=schema.esc(en["desc"]),
-        v=disp, k=key, r=reset,
+        t=schema.esc(en["title"]),
+        d=schema.esc(en["desc"]),
+        v=disp,
+        k=key,
+        r=reset,
     )
 
 
@@ -219,11 +215,14 @@ def r_json(en: dict) -> str:
         '<span class="desc">{d}</span><div class="controls">'
         '<span class="val">{v}</span>'
         '<a class="editlink" href="edit:{k}">Edit&#8230;</a>'
-        '{r}</div></div>'
+        "{r}</div></div>"
     ).format(
         m=" modified" if mod else "",
-        t=schema.esc(en["title"]), d=schema.esc(en["desc"]),
-        v=disp, k=key, r=reset,
+        t=schema.esc(en["title"]),
+        d=schema.esc(en["desc"]),
+        v=disp,
+        k=key,
+        r=reset,
     )
 
 
@@ -237,11 +236,14 @@ def r_picker(en: dict) -> str:
         '<span class="desc">{d}</span><div class="controls">'
         '<span class="val">{v}</span>'
         '<a class="selectlink" href="cmd:{c}">Select&#8230;</a>'
-        '{r}</div></div>'
+        "{r}</div></div>"
     ).format(
         m=" modified" if mod else "",
-        t=schema.esc(en["title"]), d=schema.esc(en["desc"]),
-        v=schema.esc(schema.short(val, 56)), c=en["cmd"], r=reset,
+        t=schema.esc(en["title"]),
+        d=schema.esc(en["desc"]),
+        v=schema.esc(schema.short(val, 56)),
+        c=en["cmd"],
+        r=reset,
     )
 
 
@@ -255,11 +257,14 @@ def r_respick(en: dict) -> str:
         '<span class="desc">{d}</span><div class="controls">'
         '<span class="val">{v}</span>'
         '<a class="selectlink" href="respick:{k}">Select&#8230;</a>'
-        '{r}</div></div>'
+        "{r}</div></div>"
     ).format(
         m=" modified" if mod else "",
-        t=schema.esc(en["title"]), d=schema.esc(en["desc"]),
-        v=schema.esc(schema.short(val, 56)), k=key, r=reset,
+        t=schema.esc(en["title"]),
+        d=schema.esc(en["desc"]),
+        v=schema.esc(schema.short(val, 56)),
+        k=key,
+        r=reset,
     )
 
 
@@ -274,30 +279,34 @@ def r_listpick(en: dict) -> str:
         '<span class="desc">{d}</span><div class="controls">'
         '<span class="val">{v}</span>'
         '<a class="selectlink" href="listpick:{k}">Select&#8230;</a>'
-        '&#160;&#160;<a class="editlink" href="edit:{k}">Edit&#8230;</a>'
-        '{r}</div></div>'
+        '<a class="editlink" href="edit:{k}">Edit&#8230;</a>'
+        "{r}</div></div>"
     ).format(
         m=" modified" if mod else "",
-        t=schema.esc(en["title"]), d=schema.esc(en["desc"]),
-        v=disp, k=key, r=reset,
+        t=schema.esc(en["title"]),
+        d=schema.esc(en["desc"]),
+        v=disp,
+        k=key,
+        r=reset,
     )
 
 
 # Dispatch table: entry type → render function
 RENDERERS: dict = {
-    "bool":     r_bool,
-    "enum":     r_enum,
-    "number":   r_number,
-    "string":   r_string,
-    "json":     r_json,
-    "picker":   r_picker,
-    "respick":  r_respick,
+    "bool": r_bool,
+    "enum": r_enum,
+    "number": r_number,
+    "string": r_string,
+    "json": r_json,
+    "picker": r_picker,
+    "respick": r_respick,
     "listpick": r_listpick,
 }
 
 # ---------------------------------------------------------------------------
 # Filter helper
 # ---------------------------------------------------------------------------
+
 
 def matches(en: dict, filter_text: str) -> bool:
     """Return True if *en* matches the active search *filter_text*."""
@@ -314,12 +323,13 @@ def matches(en: dict, filter_text: str) -> bool:
 # HTML / Phantom builders
 # ---------------------------------------------------------------------------
 
+
 def _wrap(inner: str, extra_style: str = "") -> str:
     """Wrap *inner* in the standard body+style shell."""
     style_attr = ' style="%s"' % extra_style if extra_style else ""
     return (
-        '<body id="settings-ui"><style>' + CSS + '</style>'
-        '<div class="shell"%s>' % style_attr + inner + '</div></body>'
+        '<body id="settings-ui"><style>' + CSS + "</style>"
+        '<div class="shell"%s>' % style_attr + inner + "</div></body>"
     )
 
 
@@ -329,12 +339,12 @@ def build_nav_html(sections: list, filter_text: str, category_index: int) -> str
     seen_keys = []
     group_items = {}
     for i, (title, _) in enumerate(sections):
-        if '›' in title:
-            group, _, leaf = title.partition(' › ')
+        if "›" in title:
+            group, _, leaf = title.partition(" › ")
             key = group.strip()
             leaf = leaf.strip()
         else:
-            key = '__root_{0}__'.format(i)
+            key = "__root_{0}__".format(i)
             leaf = title.strip()
         if key not in group_items:
             seen_keys.append(key)
@@ -347,31 +357,25 @@ def build_nav_html(sections: list, filter_text: str, category_index: int) -> str
     ]
     for key in seen_keys:
         items = group_items[key]
-        if key.startswith('__root_'):
+        if key.startswith("__root_"):
             leaf, idx = items[0]
             active = not filter_text and idx == category_index
             parts.append(
                 '<a class="treeroot{a}" href="cat:{i}">{t}</a>'.format(
-                    a=' active' if active else '', i=idx,
-                    t=schema.esc(leaf.title())
+                    a=" active" if active else "", i=idx, t=schema.esc(leaf.title())
                 )
             )
         else:
-            parts.append(
-                '<span class="treegroup">{g}</span>'.format(g=schema.esc(key))
-            )
-            for (leaf, idx) in items:
+            parts.append('<span class="treegroup">{g}</span>'.format(g=schema.esc(key)))
+            for leaf, idx in items:
                 active = not filter_text and idx == category_index
                 parts.append(
                     '<a class="treeleaf{a}" href="cat:{i}">{t}</a>'.format(
-                        a=' active' if active else '', i=idx,
-                        t=schema.esc(leaf.title())
+                        a=" active" if active else "", i=idx, t=schema.esc(leaf.title())
                     )
                 )
-    parts.append(
-        '<a class="navreset" href="action:reset_all">Restore all defaults</a>'
-    )
-    parts.append('</div>')
+    parts.append('<a class="navreset" href="action:reset_all">Restore all defaults</a>')
+    parts.append("</div>")
     return _wrap("".join(parts), "padding-bottom: 2000px;")
 
 
@@ -397,25 +401,27 @@ def build_content_phantoms(
             '<a class="search active" href="action:search">Search: {f}</a>'
             '<span class="subnote">'
             '<a href="action:clear_search">Clear search</a> '
-            '&#160;&#183;&#160; '
+            "&#160;&#183;&#160; "
             '<a href="action:reset_all">Restore all defaults</a>'
-            '</span>'.format(f=schema.esc(filter_text))
+            "</span>".format(f=schema.esc(filter_text))
         )
     else:
         header.append(
             '<a class="search" href="action:search">Search settings&#8230;</a>'
             '<span class="subnote">Changes apply immediately. '
-            '&#160;&#183;&#160; '
+            "&#160;&#183;&#160; "
             '<a href="action:reset_all">Restore all defaults</a>'
-            '</span>'
+            "</span>"
         )
-    header.append('</div>')
-    phantoms.append(sublime.Phantom(
-        sublime.Region(0, 0),
-        _wrap("".join(header), "padding-bottom: 0;"),
-        sublime.LAYOUT_BLOCK,
-        on_navigate=on_nav_callback,
-    ))
+    header.append("</div>")
+    phantoms.append(
+        sublime.Phantom(
+            sublime.Region(0, 0),
+            _wrap("".join(header), "padding-bottom: 0;"),
+            sublime.LAYOUT_BLOCK,
+            on_navigate=on_nav_callback,
+        )
+    )
 
     # -- One phantom per section (lines 1 … N) ---------------------------
     line_idx = 1
@@ -433,15 +439,17 @@ def build_content_phantoms(
         for en in visible:
             parts.append(RENDERERS[en["type"]](en))
             total_shown += 1
-        parts.append('</div>')
+        parts.append("</div>")
 
         pt = view.text_point(line_idx, 0)
-        phantoms.append(sublime.Phantom(
-            sublime.Region(pt, pt),
-            _wrap("".join(parts), "padding-top: 0; padding-bottom: 24px;"),
-            sublime.LAYOUT_BLOCK,
-            on_navigate=on_nav_callback,
-        ))
+        phantoms.append(
+            sublime.Phantom(
+                sublime.Region(pt, pt),
+                _wrap("".join(parts), "padding-top: 0; padding-bottom: 24px;"),
+                sublime.LAYOUT_BLOCK,
+                on_navigate=on_nav_callback,
+            )
+        )
         line_idx += 1
 
     # -- Empty-state message when nothing matches ------------------------
@@ -450,21 +458,25 @@ def build_content_phantoms(
             f=schema.esc(filter_text)
         )
         pt = view.text_point(line_idx, 0)
-        phantoms.append(sublime.Phantom(
-            sublime.Region(pt, pt),
-            _wrap(msg, "padding-top: 0;"),
-            sublime.LAYOUT_BLOCK,
-            on_navigate=on_nav_callback,
-        ))
+        phantoms.append(
+            sublime.Phantom(
+                sublime.Region(pt, pt),
+                _wrap(msg, "padding-top: 0;"),
+                sublime.LAYOUT_BLOCK,
+                on_navigate=on_nav_callback,
+            )
+        )
 
     # -- Footer spacer (ensures the last section can scroll to top) ------
     footer = '<div style="height: 300px;"></div>'
     pt = view.text_point(line_idx + (1 if filter_text and total_shown == 0 else 0), 0)
-    phantoms.append(sublime.Phantom(
-        sublime.Region(pt, pt),
-        _wrap(footer, "padding-top: 0;"),
-        sublime.LAYOUT_BLOCK,
-        on_navigate=on_nav_callback,
-    ))
+    phantoms.append(
+        sublime.Phantom(
+            sublime.Region(pt, pt),
+            _wrap(footer, "padding-top: 0;"),
+            sublime.LAYOUT_BLOCK,
+            on_navigate=on_nav_callback,
+        )
+    )
 
     return phantoms
