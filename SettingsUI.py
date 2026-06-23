@@ -70,19 +70,48 @@ class SettingsUiSyncListener(sublime_plugin.EventListener):
             panel._start_poll()
 
 
+class SettingsUiNewViewGuard(sublime_plugin.EventListener):
+    """Discard any new regular view opened inside the settings window (e.g. Cmd+N)."""
+
+    def on_new(self, view: sublime.View) -> None:
+        win = view.window()
+        if not win:
+            return
+        is_settings_win = any(
+            v.settings().get(panel.CONTENT_MARK) or v.settings().get(panel.NAV_MARK)
+            for v in win.views()
+            if v.id() != view.id()
+        )
+        if is_settings_win:
+            sublime.set_timeout(view.close, 0)
+
+
+_closing_window_id = None
+
+
 class SettingsUiCloseListener(sublime_plugin.EventListener):
-    """Protect the nav pane from closing; reset state when window closes."""
+    """Close the whole settings window when either pane is closed individually."""
 
     def on_pre_close(self, view: sublime.View) -> None:
-        if view.settings().get(panel.NAV_MARK):
-            # Nav view closing but content view still alive: recreate nav.
-            if panel.get_active_settings_window() is not None:
-                sublime.set_timeout(panel.render_nav, 50)
+        global _closing_window_id
+        is_nav = view.settings().get(panel.NAV_MARK)
+        is_content = view.settings().get(panel.CONTENT_MARK)
+        if not (is_nav or is_content):
+            return
+        win = view.window()
+        if not win:
+            return
+        if _closing_window_id == win.id():
+            return
+        _closing_window_id = win.id()
+        win.run_command("close_window")
 
     def on_close(self, view: sublime.View) -> None:
+        global _closing_window_id
         if (view.settings().get(panel.CONTENT_MARK)
                 or view.settings().get(panel.NAV_MARK)):
             if panel.get_active_settings_window() is None:
+                _closing_window_id = None
                 panel.reset_module_state()
 
 
@@ -99,6 +128,7 @@ def plugin_loaded() -> None:
     the current session before the save), re-render it in place so changes
     to the code / CSS are immediately visible without reopening the window.
     """
+    schema_loader.register_listener()
     win = panel.get_active_settings_window()
     if win:
         panel._ensure_prefs_listener()
@@ -124,6 +154,7 @@ def plugin_unloaded() -> None:
     re-initialise from a clean slate after the hot-reload.
     """
     prefs.prefs().clear_on_change("settings_ui")
+    schema_loader.unregister_listener()
     panel.reset_module_state()
     # Reset shared state so filter/category don't bleed across reloads.
     state._filter   = ""

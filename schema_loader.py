@@ -111,3 +111,28 @@ def ensure_schema_loaded() -> None:
                 schema.KEY_INDEX[e["key"]] = e
     except Exception as ex:
         sublime.status_message("Settings UI: dynamic schema load failed (%s)" % ex)
+
+
+def _repatch_defaults() -> None:
+    """Re-patch schema defaults from current ST prefs. Safe to call repeatedly."""
+    try:
+        defaults, _ = _load_default_prefs()
+        for entry in schema.KEY_INDEX.values():
+            if entry["key"] in defaults:
+                entry["default"] = defaults[entry["key"]]
+    except Exception:
+        pass
+
+
+def register_listener() -> None:
+    """Call from plugin_loaded() to enable reactive default-patching."""
+    sublime.load_settings("Preferences.sublime-settings").add_on_change(
+        "settings_ui_schema", _repatch_defaults
+    )
+
+
+def unregister_listener() -> None:
+    """Call from plugin_unloaded() to remove the listener."""
+    sublime.load_settings("Preferences.sublime-settings").clear_on_change(
+        "settings_ui_schema"
+    )
