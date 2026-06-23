@@ -8,7 +8,6 @@ Reads Default/Preferences.sublime-settings, merges with existing schema.KEY_INDE
 and rewrites the SECTIONS block in schema.py. ST auto-reloads the plugin on save.
 """
 import os
-import json
 import sublime
 import sublime_plugin
 from . import schema as _schema
@@ -58,7 +57,7 @@ class SettingsUiGenerateSchemaCommand(sublime_plugin.WindowCommand):
         section_map_path = os.path.join(_TOOLS_DIR, "section_map.json")
         try:
             with open(section_map_path, encoding="utf-8") as f:
-                section_map = json.load(f)
+                section_map = sublime.decode_value(f.read())
         except Exception as ex:
             sublime.error_message("Settings UI: Cannot load section_map.json\n%s" % ex)
             return
