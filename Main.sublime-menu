@@ -4,8 +4,26 @@
         "children": [
             {
                 "caption": "Settings UI",
-                "id": "settings-ui",
                 "command": "settings_ui_open"
+            },
+            {
+                "id": "package-settings",
+                "caption": "Package Settings",
+                "children": [
+                    {
+                        "caption": "SettingsUI",
+                        "children": [
+                            {
+                                "caption": "Settings",
+                                "command": "edit_settings",
+                                "args": {
+                                    "base_file": "${packages}/SettingsUI/SettingsUI.sublime-settings",
+                                    "user_file": "${packages}/User/SettingsUI.sublime-settings"
+                                }
+                            }
+                        ]
+                    }
+                ]
             }
         ]
     }
