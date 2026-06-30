@@ -28,13 +28,18 @@ class SettingsUiOpenCommand(sublime_plugin.WindowCommand):
     """Open the Settings UI in a dedicated two-pane window."""
 
     def run(self) -> None:
+        global _closing_window_id
         existing = panel.get_active_settings_window()
         if existing:
-            # bring_to_front() cannot cross macOS Spaces; user may be taken to
-            # the Space where the settings window lives.
-            existing.bring_to_front()
+            # Pre-set the flag so on_pre_close skips the redundant close_window call.
+            _closing_window_id = existing.id()
+            existing.run_command("close_window")
+            # Defer opening until the close_window command finishes.
+            sublime.set_timeout(self._open_fresh, 0)
             return
+        self._open_fresh()
 
+    def _open_fresh(self) -> None:
         sublime.run_command("new_window")
         win = sublime.active_window()
 
@@ -71,19 +76,36 @@ class SettingsUiSyncListener(sublime_plugin.EventListener):
 
 
 class SettingsUiNewViewGuard(sublime_plugin.EventListener):
-    """Discard any new regular view opened inside the settings window (e.g. Cmd+N)."""
+    """Discard any view opened inside the settings window that isn't a settings pane."""
+
+    def _is_settings_window(self, win: sublime.Window, exclude_id: int) -> bool:
+        # Require BOTH panes to be present — during initial setup the nav view
+        # exists before the content view is created, and we must not close the
+        # content view while it is being set up.
+        other = [v for v in win.views() if v.id() != exclude_id]
+        has_nav     = any(v.settings().get(panel.NAV_MARK)     for v in other)
+        has_content = any(v.settings().get(panel.CONTENT_MARK) for v in other)
+        return has_nav and has_content
 
     def on_new(self, view: sublime.View) -> None:
         win = view.window()
         if not win:
             return
-        is_settings_win = any(
-            v.settings().get(panel.CONTENT_MARK) or v.settings().get(panel.NAV_MARK)
-            for v in win.views()
-            if v.id() != view.id()
-        )
-        if is_settings_win:
+        if self._is_settings_window(win, view.id()):
             sublime.set_timeout(view.close, 0)
+
+    def on_load(self, view: sublime.View) -> None:
+        if not view.file_name():
+            return
+        win = view.window()
+        if not win:
+            return
+        if self._is_settings_window(win, view.id()):
+            fname = view.file_name()
+            def _redirect():
+                view.close()
+                panel._get_target_window().open_file(fname)
+            sublime.set_timeout(_redirect, 0)
 
 
 _closing_window_id = None
