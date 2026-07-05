@@ -6,6 +6,12 @@ Usage (console):         window.run_command("settings_ui_generate_schema")
 
 Reads Default/Preferences.sublime-settings, merges with existing schema.KEY_INDEX,
 and rewrites the SECTIONS block in schema.py. ST auto-reloads the plugin on save.
+
+The installed package may be a read-only .sublime-package zip, so all package
+files are read through the resource API (sublime.load_resource) and the
+regenerated schema.py is written under sublime.packages_path(). For a zipped
+install that loose file acts as a standard package override and shadows the
+zipped copy.
 """
 import os
 import sublime
@@ -13,8 +19,7 @@ import sublime_plugin
 from .lib import schema as _schema
 from .lib import schema_gen
 
-_TOOLS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "tools")
-_SCHEMA_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "lib", "schema.py")
+_PKG = __package__.split(".")[0]
 
 
 def _load_prefs_data() -> list:
@@ -54,10 +59,10 @@ def _load_prefs_data() -> list:
 
 class SettingsUiGenerateSchemaCommand(sublime_plugin.WindowCommand):
     def run(self) -> None:
-        section_map_path = os.path.join(_TOOLS_DIR, "section_map.json")
         try:
-            with open(section_map_path, encoding="utf-8") as f:
-                section_map = sublime.decode_value(f.read())
+            section_map = sublime.decode_value(
+                sublime.load_resource("Packages/%s/tools/section_map.json" % _PKG)
+            )
         except Exception as ex:
             sublime.error_message("Settings UI: Cannot load section_map.json\n%s" % ex)
             return
@@ -73,8 +78,8 @@ class SettingsUiGenerateSchemaCommand(sublime_plugin.WindowCommand):
         new_sections_code = schema_gen.sections_to_code(sections)
 
         try:
-            with open(_SCHEMA_PATH, encoding="utf-8") as f:
-                source = f.read()
+            # Resolves to the loose override if one exists, else the zipped copy.
+            source = sublime.load_resource("Packages/%s/lib/schema.py" % _PKG)
         except Exception as ex:
             sublime.error_message("Settings UI: Cannot read schema.py\n%s" % ex)
             return
@@ -85,8 +90,10 @@ class SettingsUiGenerateSchemaCommand(sublime_plugin.WindowCommand):
             sublime.error_message("Settings UI: %s" % ex)
             return
 
+        schema_path = os.path.join(sublime.packages_path(), _PKG, "lib", "schema.py")
         try:
-            with open(_SCHEMA_PATH, "w", encoding="utf-8", newline="\n") as f:
+            os.makedirs(os.path.dirname(schema_path), exist_ok=True)
+            with open(schema_path, "w", encoding="utf-8", newline="\n") as f:
                 f.write(new_source)
         except Exception as ex:
             sublime.error_message("Settings UI: Failed to write schema.py\n%s" % ex)
