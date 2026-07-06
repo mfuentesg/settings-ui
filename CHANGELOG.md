@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.5.1] - 2026-07-05
+
+### Fixed
+- Removed the top-level `__init__.py` — Sublime Text loads every top-level `.py`
+  file in a package as a plugin, and the docs advise against shipping an
+  `__init__` file there
+- `Settings UI: Generate Schema` no longer reads or writes files inside the
+  package directory (which is read-only when installed as a `.sublime-package`
+  zip). Package files are now read through `sublime.load_resource()`, and the
+  regenerated `schema.py` is written under `sublime.packages_path()`, where it
+  acts as a standard package override for zipped installs
+
 ## [0.5.0] - 2026-06-23
 
 ### Fixed
