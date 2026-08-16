@@ -284,7 +284,7 @@ def on_nav(href: str) -> None:
 
     # ---- Delegated to pickers -------------------------------------------
     if cmd == "cmd":
-        sublime.active_window().run_command(rest)
+        _get_target_window().run_command(rest)
         return
     if cmd == "respick":
         pickers.open_resource_picker(rest)
@@ -332,8 +332,18 @@ def reset_module_state() -> None:
     _phantom_sets      = {}
 
 
+def _get_target_window() -> "sublime.Window":
+    """Return a non-settings window, creating one if needed."""
+    for w in sublime.windows():
+        if not any(v.settings().get(CONTENT_MARK) or v.settings().get(NAV_MARK)
+                   for v in w.views()):
+            return w
+    sublime.run_command("new_window")
+    return sublime.active_window()
+
+
 def _open_raw_config() -> None:
     """Open Preferences.sublime-settings via ST's native settings editor."""
-    sublime.run_command("edit_settings", {
+    _get_target_window().run_command("edit_settings", {
         "base_file": "${packages}/Default/Preferences.sublime-settings",
     })

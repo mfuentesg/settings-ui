@@ -7,6 +7,7 @@ inside callback closures – the import only happens after both modules are
 fully loaded.
 """
 
+import json
 import os
 import subprocess
 import sys
