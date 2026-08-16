@@ -3,7 +3,7 @@ import sublime
 from lib import panel
 
 
-def setup_function():
+def _reset():
     sublime.reset()
     panel.reset_module_state()
 
@@ -14,7 +14,7 @@ def _fresh_window():
 
 class TestGetActiveSettingsWindow:
     def setup_method(self):
-        setup_function()
+        _reset()
     def test_returns_none_without_marked_view(self):
         w = _fresh_window()
         w.new_file()
@@ -36,7 +36,7 @@ class TestGetActiveSettingsWindow:
 
 class TestGetNavView:
     def setup_method(self):
-        setup_function()
+        _reset()
 
     def test_creates_and_marks_new_nav_view(self):
         w = _fresh_window()
@@ -54,7 +54,7 @@ class TestGetNavView:
 
 class TestGetContentView:
     def setup_method(self):
-        setup_function()
+        _reset()
 
     def test_creates_and_marks_new_content_view(self):
         w = _fresh_window()
@@ -77,7 +77,7 @@ class TestGetContentView:
 
 class TestResetModuleState:
     def setup_method(self):
-        setup_function()
+        _reset()
 
     def test_clears_phantom_sets_and_flags(self):
         panel._phantom_sets[1] = object()
@@ -90,3 +90,4 @@ class TestResetModuleState:
         assert panel._phantom_sets == {}
         assert panel._polling is False
         assert panel._prefs_listener_on is False
+        assert panel._render_scheduled is False

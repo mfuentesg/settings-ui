@@ -22,6 +22,15 @@ def _settings_window():
     return w, nav, content
 
 
+def _settings_window_mid_setup():
+    """A window with only the nav pane marked, like a settings window whose
+    content pane hasn't been created yet."""
+    w = sublime.Window()
+    nav = w.new_file()
+    nav.settings().set("settings_ui_nav", True)
+    return w, nav
+
+
 class TestNewViewGuard:
     def test_ignores_view_in_non_settings_window(self):
         su = import_settings_ui()
@@ -42,6 +51,20 @@ class TestNewViewGuard:
         guard.on_new(stray)
 
         assert stray not in w.views()
+
+    def test_ignores_new_view_while_content_pane_not_yet_created(self):
+        """Regression test for the first-run flash-then-crash: a settings
+        window mid-setup only has its nav pane marked. Closing the content
+        view while it's still being created is exactly the bug that
+        _is_settings_window()'s both-marks requirement was added to fix."""
+        su = import_settings_ui()
+        w, _nav = _settings_window_mid_setup()
+        content = w.new_file()
+        guard = su.SettingsUiNewViewGuard()
+
+        guard.on_new(content)
+
+        assert content in w.views()
 
     def test_redirects_loaded_file_out_of_settings_window(self):
         su = import_settings_ui()

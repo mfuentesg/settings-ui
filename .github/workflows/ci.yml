@@ -5,6 +5,9 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
   pytest:
     runs-on: ubuntu-latest
@@ -13,11 +16,12 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           python-version: "3.8"
-      - run: uv sync
+      - run: uv sync --frozen
       - run: uv run pytest tests/ -v
 
   st-headless:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: SublimeText/UnitTesting/actions/setup@v1

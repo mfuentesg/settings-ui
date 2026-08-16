@@ -15,6 +15,15 @@
   schedules a redundant `close_window` while one is already in flight for that
   window, and reopening the panel while it's already open no longer races with
   the in-progress close
+- Fixed a crash on first open: the new-view guard now requires both the nav
+  and content panes to be present before treating a window as the settings
+  window, so it no longer closes the content view while it's still being set
+  up
+- Files opened inside the settings window (e.g. via File → Open Recent) are
+  now redirected to a normal window instead of being silently discarded
+- Re-running the `Settings UI` command while the panel is already open now
+  closes and reopens it instead of calling `bring_to_front()`, which could
+  leave the panel inaccessible on macOS if it lived on a different Space
 
 ## [0.5.0] - 2026-06-23
 

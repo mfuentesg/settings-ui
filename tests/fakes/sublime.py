@@ -231,6 +231,11 @@ def save_settings(name):
 
 
 def set_timeout(callback, delay=0):
+    # Runs synchronously/inline, unlike real Sublime Text. Code that
+    # self-reschedules by calling set_timeout(fn, delay) from inside fn
+    # itself (e.g. lib/panel.py's _start_poll()) will recurse until Python's
+    # recursion limit is hit if exercised directly under this fake — don't
+    # call such functions from tests.
     callback()
 
 
