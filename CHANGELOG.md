@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.5.1] - 2026-07-05
+## [0.5.1] - 2026-08-16
 
 ### Fixed
 - Removed the top-level `__init__.py` — Sublime Text loads every top-level `.py`
@@ -11,6 +11,10 @@
   zip). Package files are now read through `sublime.load_resource()`, and the
   regenerated `schema.py` is written under `sublime.packages_path()`, where it
   acts as a standard package override for zipped installs
+- Fixed a deadlock when closing the settings window: `on_pre_close` no longer
+  schedules a redundant `close_window` while one is already in flight for that
+  window, and reopening the panel while it's already open no longer races with
+  the in-progress close
 
 ## [0.5.0] - 2026-06-23
 
