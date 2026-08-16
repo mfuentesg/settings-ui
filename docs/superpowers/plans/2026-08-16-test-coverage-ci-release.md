@@ -572,11 +572,17 @@ git commit -m "test: add coverage for schema.py catalogue and state.py"
 
 ```python
 # tests/test_panel.py
+import pytest
 import sublime
 from lib import panel
 
 
-def setup_function():
+@pytest.fixture(autouse=True)
+def _reset_fakes():
+    # pytest's module-level setup_function() hook does NOT run before methods
+    # of test classes (only before bare module-level test functions) — every
+    # test class below needs this reset, so an autouse fixture is used
+    # instead of setup_function().
     sublime.reset()
     panel.reset_module_state()
 
@@ -688,11 +694,17 @@ This task directly regression-tests the race `settings-ui#3` fixed: `SettingsUiN
 
 ```python
 # tests/test_settings_ui.py
+import pytest
 import sublime
 from tests.helpers import import_settings_ui
 
 
-def setup_function():
+@pytest.fixture(autouse=True)
+def _reset_fakes():
+    # pytest's module-level setup_function() hook does NOT run before methods
+    # of test classes (only before bare module-level test functions) — every
+    # test class below needs this reset, so an autouse fixture is used
+    # instead of setup_function().
     sublime.reset()
 
 
