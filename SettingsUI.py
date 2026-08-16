@@ -143,8 +143,8 @@ class SettingsUiCloseListener(sublime_plugin.EventListener):
 
     def _close_remaining_window(self, window_id: int) -> None:
         global _closing_window_id
-        win = next((w for w in sublime.windows() if w.id() == window_id), None)
-        if not win:
+        win = sublime.Window(window_id)
+        if not win.is_valid():
             return
         has_settings_pane = any(
             v.settings().get(panel.CONTENT_MARK)
