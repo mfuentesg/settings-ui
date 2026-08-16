@@ -660,6 +660,17 @@ class TestResetModuleState:
         assert panel._prefs_listener_on is False
 ```
 
+**Note (post-execution):** the implementer for this task independently discovered and fixed the
+same `setup_function()` bug before this corrected snippet reached them, using a different-but-
+equivalent pattern: a module-level `def setup_function():` helper plus a `def setup_method(self):
+setup_function()` in each of the four test classes above, rather than the `@pytest.fixture` shown
+here. Both achieve identical per-test isolation (confirmed by the task reviewer, including a
+reversed-class-execution-order run showing no cross-class leakage). `tests/test_panel.py` as
+actually shipped uses the `setup_method` pattern, not the fixture shown above — see the SDD ledger
+(`.superpowers/sdd/2026-08-16-test-coverage-ci-release/progress.md`) for the full history. This
+plan snippet is left as originally corrected rather than rewritten to match, so the historical
+record of the ruling that was made stays intact.
+
 - [ ] **Step 2: Run to verify it fails first (sanity check on the fakes)**
 
 Run: `pytest tests/test_panel.py -v`
