@@ -1,0 +1,6 @@
+{
+    "tests_dir": "tests_st",
+    "pattern": "test_*.py",
+    "verbosity": 2,
+    "failfast": false
+}
