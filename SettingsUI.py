@@ -115,7 +115,6 @@ class SettingsUiCloseListener(sublime_plugin.EventListener):
     """Close the whole settings window when either pane is closed individually."""
 
     def on_pre_close(self, view: sublime.View) -> None:
-        global _closing_window_id
         is_nav = view.settings().get(panel.NAV_MARK)
         is_content = view.settings().get(panel.CONTENT_MARK)
         if not (is_nav or is_content):
@@ -123,10 +122,16 @@ class SettingsUiCloseListener(sublime_plugin.EventListener):
         win = view.window()
         if not win:
             return
-        if _closing_window_id == win.id():
+        window_id = win.id()
+        if _closing_window_id == window_id:
             return
-        _closing_window_id = win.id()
-        win.run_command("close_window")
+
+        # Do not nest close_window inside its own on_pre_close callback. That
+        # deadlocks Sublime when the user closes the settings window normally.
+        # Once this close finishes, close the window only if one pane remains.
+        sublime.set_timeout(
+            lambda: self._close_remaining_window(window_id), 0
+        )
 
     def on_close(self, view: sublime.View) -> None:
         global _closing_window_id
@@ -135,6 +140,21 @@ class SettingsUiCloseListener(sublime_plugin.EventListener):
             if panel.get_active_settings_window() is None:
                 _closing_window_id = None
                 panel.reset_module_state()
+
+    def _close_remaining_window(self, window_id: int) -> None:
+        global _closing_window_id
+        win = next((w for w in sublime.windows() if w.id() == window_id), None)
+        if not win:
+            return
+        has_settings_pane = any(
+            v.settings().get(panel.CONTENT_MARK)
+            or v.settings().get(panel.NAV_MARK)
+            for v in win.views()
+        )
+        if not has_settings_pane:
+            return
+        _closing_window_id = window_id
+        win.run_command("close_window")
 
 
 # ---------------------------------------------------------------------------
