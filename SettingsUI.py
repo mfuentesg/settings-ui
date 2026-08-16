@@ -129,9 +129,7 @@ class SettingsUiCloseListener(sublime_plugin.EventListener):
         # Do not nest close_window inside its own on_pre_close callback. That
         # deadlocks Sublime when the user closes the settings window normally.
         # Once this close finishes, close the window only if one pane remains.
-        sublime.set_timeout(
-            lambda: self._close_remaining_window(window_id), 0
-        )
+        sublime.set_timeout(lambda: self._close_remaining_window(window_id))
 
     def on_close(self, view: sublime.View) -> None:
         global _closing_window_id
