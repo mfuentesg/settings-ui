@@ -24,6 +24,10 @@
 - Re-running the `Settings UI` command while the panel is already open now
   closes and reopens it instead of calling `bring_to_front()`, which could
   leave the panel inaccessible on macOS if it lived on a different Space
+- Commands run from a `cmd:` link and the "View Raw Config" button now open
+  in a non-settings window instead of the settings window itself
+- Fixed a crash (`NameError`) when editing a JSON-typed setting from the
+  panel — the `json` module was used but never imported
 
 ## [0.5.0] - 2026-06-23
 
