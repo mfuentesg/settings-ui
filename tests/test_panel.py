@@ -75,6 +75,26 @@ class TestGetContentView:
         assert len(w.views()) == 1
 
 
+class TestOnNav:
+    def setup_method(self):
+        _reset()
+
+    def test_runs_native_picker_in_settings_window(self):
+        normal_window = _fresh_window()
+        settings_window = _fresh_window()
+        content = settings_window.new_file()
+        content.settings().set(panel.CONTENT_MARK, True)
+        normal_calls = []
+        settings_calls = []
+        normal_window.run_command = lambda name: normal_calls.append(name)
+        settings_window.run_command = lambda name: settings_calls.append(name)
+
+        panel.on_nav("cmd:select_color_scheme")
+
+        assert settings_calls == ["select_color_scheme"]
+        assert normal_calls == []
+
+
 class TestResetModuleState:
     def setup_method(self):
         _reset()

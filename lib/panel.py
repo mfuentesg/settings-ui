@@ -284,7 +284,9 @@ def on_nav(href: str) -> None:
 
     # ---- Delegated to pickers -------------------------------------------
     if cmd == "cmd":
-        _get_target_window().run_command(rest)
+        win = get_active_settings_window()
+        if win:
+            win.run_command(rest)
         return
     if cmd == "respick":
         pickers.open_resource_picker(rest)
