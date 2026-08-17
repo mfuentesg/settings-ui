@@ -251,6 +251,13 @@ def on_nav(href: str) -> None:
     enum:<key>:<choice_idx> – select an enum value by index
     step:<key>:<delta>      – increment/decrement a numeric setting
     """
+    # A quick panel opened by show_quick_panel() does not replace another
+    # custom quick panel reliably. Close any existing overlay before handling
+    # a click so switching directly between picker links always works.
+    settings_window = get_active_settings_window()
+    if settings_window:
+        settings_window.run_command("hide_overlay")
+
     # ---- Global actions --------------------------------------------------
     if href == "action:reset_all":
         prefs.reset_all()
@@ -284,9 +291,8 @@ def on_nav(href: str) -> None:
 
     # ---- Delegated to pickers -------------------------------------------
     if cmd == "cmd":
-        win = get_active_settings_window()
-        if win:
-            win.run_command(rest)
+        if settings_window:
+            settings_window.run_command(rest)
         return
     if cmd == "respick":
         pickers.open_resource_picker(rest)

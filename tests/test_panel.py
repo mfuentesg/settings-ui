@@ -91,8 +91,24 @@ class TestOnNav:
 
         panel.on_nav("cmd:select_color_scheme")
 
-        assert settings_calls == ["select_color_scheme"]
+        assert settings_calls == ["hide_overlay", "select_color_scheme"]
         assert normal_calls == []
+
+    def test_hides_existing_overlay_before_resource_picker(self, monkeypatch):
+        settings_window = _fresh_window()
+        content = settings_window.new_file()
+        content.settings().set(panel.CONTENT_MARK, True)
+        events = []
+        settings_window.run_command = lambda name: events.append(name)
+        monkeypatch.setattr(
+            panel.pickers,
+            "open_resource_picker",
+            lambda key: events.append("picker:" + key),
+        )
+
+        panel.on_nav("respick:dark_color_scheme")
+
+        assert events == ["hide_overlay", "picker:dark_color_scheme"]
 
 
 class TestResetModuleState:
