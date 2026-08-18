@@ -11,6 +11,15 @@
 - Added `tools/run-st-tests-docker.sh` so `tests_st/` can be run locally via
   Docker, without a local Sublime Text install or license, matching what CI
   already runs headlessly
+- Fixed `st-headless` CI job to pass `package-name: SettingsUI` to
+  `SublimeText/UnitTesting`'s setup/run-tests actions. Without it, the action
+  derives the package folder name from the GitHub repo name
+  (`mfuentesg/settings-ui` → `settings-ui`), which doesn't match the actual
+  package name (`SettingsUI`, per `Main.sublime-menu`/README/Package
+  Control) — a latent mismatch that only started mattering once
+  `tests_st/test_new_view_guard.py` and
+  `tests_st/test_close_listener_deadlock_guard.py` started importing the
+  package by name (`import SettingsUI.SettingsUI`)
 
 ## [0.5.1] - 2026-08-16
 
