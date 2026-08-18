@@ -6,15 +6,21 @@ from SettingsUI.lib import panel
 
 class TestCloseListenerDeadlockGuard(DeferrableTestCase):
     def setUp(self):
+        # _close_remaining_window() below runs a real close_window command on
+        # self.window -- if that were the harness's sole window, closing it
+        # would hang the whole headless run (confirmed in CI). Run these
+        # tests in a dedicated second window instead, so the harness's own
+        # window is never touched.
+        sublime.active_window().run_command("new_window")
+        yield 300
         self.window = sublime.active_window()
         self.listener = settings_ui.SettingsUiCloseListener()
         settings_ui._closing_window_id = None
 
     def tearDown(self):
         settings_ui._closing_window_id = None
-        for v in list(self.window.views()):
-            if v.settings().get(panel.NAV_MARK) or v.settings().get(panel.CONTENT_MARK):
-                v.close()
+        if self.window.is_valid():
+            self.window.run_command("close_window")
 
     def _settings_window(self):
         nav = self.window.new_file()
@@ -29,20 +35,13 @@ class TestCloseListenerDeadlockGuard(DeferrableTestCase):
         or Sublime deadlocks on the nested command."""
         nav, content = self._settings_window()
         settings_ui._closing_window_id = self.window.id()
-        calls = []
-        original_run_command = self.window.run_command
-        self.window.run_command = lambda name, args=None: (
-            calls.append(name),
-            original_run_command(name, args),
-        )[-1]
 
-        try:
-            self.listener.on_pre_close(nav)
-            self.assertNotIn("close_window", calls)
-        finally:
-            self.window.run_command = original_run_command
-            nav.close()
-            content.close()
+        self.listener.on_pre_close(nav)
+        yield 300
+
+        self.assertTrue(self.window.is_valid())
+        nav.close()
+        content.close()
 
     def test_closes_remaining_window_when_one_pane_still_open(self):
         nav, content = self._settings_window()
@@ -55,7 +54,7 @@ class TestCloseListenerDeadlockGuard(DeferrableTestCase):
         yield 300
 
         self.assertEqual(settings_ui._closing_window_id, self.window.id())
-        content.close()
+        self.assertFalse(self.window.is_valid())
 
     def test_on_close_resets_state_once_no_settings_window_remains(self):
         nav, content = self._settings_window()
