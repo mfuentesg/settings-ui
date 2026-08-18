@@ -76,6 +76,31 @@ Edit via **Preferences → Package Settings → SettingsUI → Settings**.
 
 Sublime Text 4 (build 4000+).
 
+## Development
+
+### Running tests
+
+Pure-logic tests (`tests/`) — no Sublime Text dependency:
+
+```
+uv run pytest tests/ -v
+```
+
+Lifecycle tests (`tests_st/`) run against real, headless Sublime Text via Docker — no
+local Sublime Text install or license required:
+
+```
+./tools/run-st-tests-docker.sh
+```
+
+Run a single file with `./tools/run-st-tests-docker.sh --file tests_st/test_panel.py`.
+The first run clones [`SublimeText/UnitTesting`](https://github.com/SublimeText/UnitTesting)
+into a gitignored `.cache/` directory and builds a local Docker image; later runs reuse
+a cached Docker volume and are much faster. CI runs the same `tests_st/` suite via
+UnitTesting's official GitHub Action instead of Docker — both are entry points to
+identical test content, not two different things being tested (see
+`docs/superpowers/specs/2026-08-18-real-st-test-migration-design.md`).
+
 ## License
 
 MIT — see [LICENSE](LICENSE).

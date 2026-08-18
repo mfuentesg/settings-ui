@@ -1,5 +1,17 @@
 # Changelog
 
+## [Unreleased]
+
+### Development
+- Removed `tests/fakes/{sublime,sublime_plugin}.py` and the pytest tier built on
+  them (`test_panel.py`, `test_settings_ui.py`) — their coverage now lives in
+  `tests_st/` (`test_panel.py`, `test_new_view_guard.py`,
+  `test_close_listener_deadlock_guard.py`) and runs against real, headless
+  Sublime Text instead of a hand-rolled model of it
+- Added `tools/run-st-tests-docker.sh` so `tests_st/` can be run locally via
+  Docker, without a local Sublime Text install or license, matching what CI
+  already runs headlessly
+
 ## [0.5.1] - 2026-08-16
 
 ### Fixed
