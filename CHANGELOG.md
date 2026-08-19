@@ -20,6 +20,20 @@
   `tests_st/test_new_view_guard.py` and
   `tests_st/test_close_listener_deadlock_guard.py` started importing the
   package by name (`import SettingsUI.SettingsUI`)
+- Fixed 5 `tests_st/` assertions left over from the fake-sublime tier that
+  don't hold against real headless Sublime Text, which is what was actually
+  failing the `st-headless` CI job once the package-name pin above let it
+  run: `test_panel.py`'s `assertIs` checks assumed `sublime.View`/`Window`
+  are singletons per id, but real ST recreates a new wrapper object on every
+  API call (equal by id, never `is`-identical) — switched those to `.id()`
+  comparisons. `test_new_view_guard.py::test_closes_stray_view_opened_in_settings_window`
+  asserted the guard's `sublime.set_timeout`-deferred close before giving it
+  a tick to run. `test_close_listener_deadlock_guard.py::test_closes_remaining_window_when_one_pane_still_open`
+  asserted `_closing_window_id` stayed set after the close, not accounting
+  for the real, auto-registered `SettingsUiCloseListener` also firing on the
+  actual `close_window` cascade and legitimately resetting it to `None` once
+  the settings window is fully gone — switched to asserting the window's
+  invalidity plus the reset flag, the durable end state
 
 ## [0.5.1] - 2026-08-16
 

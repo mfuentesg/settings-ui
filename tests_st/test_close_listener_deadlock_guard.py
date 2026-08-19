@@ -53,8 +53,14 @@ class TestCloseListenerDeadlockGuard(DeferrableTestCase):
         self.listener.on_pre_close(nav)
         yield 300
 
-        self.assertEqual(settings_ui._closing_window_id, self.window.id())
+        # The scheduled close_window cascades into the *live*, auto-registered
+        # SettingsUiCloseListener's on_pre_close/on_close for both panes (a
+        # separate instance from self.listener, sharing the same module
+        # globals) -- once the settings window is fully gone, on_close resets
+        # _closing_window_id back to None. So the window's invalidity, not a
+        # lingering flag value, is the durable signal that the close happened.
         self.assertFalse(self.window.is_valid())
+        self.assertIsNone(settings_ui._closing_window_id)
 
     def test_on_close_resets_state_once_no_settings_window_remains(self):
         nav, content = self._settings_window()

@@ -24,7 +24,11 @@ class TestGetActiveSettingsWindow(DeferrableTestCase):
         v = self.window.new_file()
         self._created_views.append(v)
         v.settings().set(panel.CONTENT_MARK, True)
-        self.assertIs(panel.get_active_settings_window(), self.window)
+        found = panel.get_active_settings_window()
+        self.assertIsNotNone(found)
+        # sublime.Window wrappers are recreated on every API call (equal by
+        # id, never `is`-identical), so compare ids rather than identity.
+        self.assertEqual(found.id(), self.window.id())
 
     def test_finds_window_with_nav_mark_only_returns_none(self):
         v = self.window.new_file()
@@ -52,7 +56,9 @@ class TestGetNavView(DeferrableTestCase):
     def test_returns_existing_nav_view_without_duplicating(self):
         first = panel.get_nav_view(self.window)
         second = panel.get_nav_view(self.window)
-        self.assertIs(first, second)
+        # sublime.View wrappers are recreated on every API call (equal by
+        # id, never `is`-identical), so compare ids rather than identity.
+        self.assertEqual(first.id(), second.id())
 
 
 class TestGetContentView(DeferrableTestCase):
@@ -79,7 +85,9 @@ class TestGetContentView(DeferrableTestCase):
     def test_returns_existing_content_view_without_duplicating(self):
         first = panel.get_content_view(self.window)
         second = panel.get_content_view(self.window)
-        self.assertIs(first, second)
+        # sublime.View wrappers are recreated on every API call (equal by
+        # id, never `is`-identical), so compare ids rather than identity.
+        self.assertEqual(first.id(), second.id())
 
 
 class TestResetModuleState(DeferrableTestCase):

@@ -39,6 +39,9 @@ class TestNewViewGuard(DeferrableTestCase):
         stray = self.window.new_file()
 
         self.guard.on_new(stray)
+        # on_new schedules the close via sublime.set_timeout rather than
+        # closing synchronously -- give it a tick to run.
+        yield 300
 
         self.assertFalse(stray.is_valid())
         nav.close()
