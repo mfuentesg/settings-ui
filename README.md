@@ -87,7 +87,7 @@ uv run pytest tests/ -v
 ```
 
 Real-ST regression tests (`tests_st/`) run against real, headless Sublime Text via
-Docker — no local Sublime Text install or license required. This tier only covers
+Docker — no local Sublime Text install or license required. This tier primarily covers
 window-lifecycle regressions (open/close crashes) that a hand-rolled `sublime` model
 can't faithfully reproduce; it's a smoke suite, not a replacement for `tests/`, and
 every test in it drives the plugin through real commands and real view/window

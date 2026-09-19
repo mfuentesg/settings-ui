@@ -13,7 +13,15 @@ class TestNewViewGuard(DeferrableTestCase):
     plugin host already runs for this package, via real event dispatch --
     never by instantiating the listener class directly (see this plan's
     Global Constraints for why: a second manually-driven instance races the
-    live one over shared state in the sibling close-listener case)."""
+    live one over shared state in the sibling close-listener case).
+
+    Note: wherever a test does nav.close() immediately followed by
+    content.close() with no yield between them, that ordering is only safe
+    because both closes land in the same synchronous tick. SettingsUiCloseListener
+    .on_pre_close schedules a deferred _close_remaining_window(window_id) call;
+    inserting a yield between the two close() calls could let that callback
+    fire while content is still marked, running close_window on the wrong
+    window (potentially the main ST window running this whole test suite)."""
 
     def setUp(self):
         self.window = sublime.active_window()
@@ -73,10 +81,12 @@ class TestNewViewGuard(DeferrableTestCase):
             yield 300  # let the guard's async redirect (set_timeout 0) run
 
             self.assertNotIn(stray, self.window.views())
-            other_windows = [w for w in sublime.windows() if w.id() != self.window.id()]
-            self.assertEqual(len(other_windows), 1)
-            self._extra_windows.append(other_windows[0])
-            redirected_views = other_windows[0].views()
+            hosting = [w for w in sublime.windows()
+                       if w.id() != self.window.id()
+                       and any(v.file_name() == path for v in w.views())]
+            self.assertEqual(len(hosting), 1)
+            self._extra_windows.append(hosting[0])
+            redirected_views = hosting[0].views()
             self.assertEqual(len(redirected_views), 1)
             self.assertEqual(redirected_views[0].file_name(), path)
 

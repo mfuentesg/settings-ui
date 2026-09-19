@@ -16,10 +16,10 @@ if [ ! -d "$CACHE_DIR/.git" ]; then
   mkdir -p "$(dirname "$CACHE_DIR")"
   git clone --depth 1 https://github.com/SublimeText/UnitTesting.git "$CACHE_DIR"
 else
-  git -C "$CACHE_DIR" pull --ff-only
+  git -C "$CACHE_DIR" pull --ff-only || echo "warning: could not update cached UnitTesting, using existing clone" >&2
 fi
 
-PYTHON="$(command -v python3 || command -v python)"
+PYTHON="$(command -v python3 || command -v python || true)"
 if [ -z "$PYTHON" ]; then
   echo "error: no python3/python interpreter found on PATH" >&2
   exit 1
