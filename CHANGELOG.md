@@ -1,26 +1,5 @@
 # Changelog
 
-## [Unreleased]
-
-### Development
-- Removed `tests/fakes/{sublime,sublime_plugin}.py` and the pytest tier built on
-  them (`test_panel.py`, `test_settings_ui.py`) — their coverage now lives in
-  `tests_st/` (`test_panel.py`, `test_new_view_guard.py`,
-  `test_close_listener_deadlock_guard.py`) and runs against real, headless
-  Sublime Text instead of a hand-rolled model of it
-- Added `tools/run-st-tests-docker.sh` so `tests_st/` can be run locally via
-  Docker, without a local Sublime Text install or license, matching what CI
-  already runs headlessly
-- Fixed `st-headless` CI job to pass `package-name: SettingsUI` to
-  `SublimeText/UnitTesting`'s setup/run-tests actions. Without it, the action
-  derives the package folder name from the GitHub repo name
-  (`mfuentesg/settings-ui` → `settings-ui`), which doesn't match the actual
-  package name (`SettingsUI`, per `Main.sublime-menu`/README/Package
-  Control) — a latent mismatch that only started mattering once
-  `tests_st/test_new_view_guard.py` and
-  `tests_st/test_close_listener_deadlock_guard.py` started importing the
-  package by name (`import SettingsUI.SettingsUI`)
-
 ## [0.5.1] - 2026-08-16
 
 ### Fixed
