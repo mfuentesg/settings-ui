@@ -22,9 +22,18 @@ from . import schema, prefs, state
 
 def _run_cmd(args: list, timeout: int = 20) -> "str | None":
     """Run a subprocess, return decoded stdout or None on failure."""
+    startupinfo = None
+    if sys.platform == "win32":
+        startupinfo = subprocess.STARTUPINFO()
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startupinfo.wShowWindow = subprocess.SW_HIDE
     try:
         p = subprocess.run(
-            args, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, timeout=timeout
+            args,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            timeout=timeout,
+            startupinfo=startupinfo,
         )
         return p.stdout.decode("utf-8", "replace")
     except Exception:

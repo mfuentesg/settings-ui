@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.5.2] - 2026-09-18
+
+### Fixed
+- Added `args.default` (`"{}"`) to the `edit_settings` command entries in
+  `Default.sublime-commands` and `Main.sublime-menu`'s `Settings` entry, per
+  Package Control reviewer guidance
+- Added a `Key Bindings` entry under `Preferences > Package Settings >
+  SettingsUI` in `Main.sublime-menu`, so the shipped `(Example).sublime-keymap`
+  files are discoverable from the menu
+- `lib/pickers.py`'s font-discovery subprocess now hides its console window on
+  Windows via `STARTUPINFO`/`SW_HIDE`
+- Replaced `tests/conftest.py`'s manual `sys.path.insert` calls with pytest's
+  declarative `pythonpath` option in `pyproject.toml`
+
 ## [0.5.1] - 2026-08-16
 
 ### Fixed
