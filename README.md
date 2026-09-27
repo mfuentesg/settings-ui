@@ -76,6 +76,34 @@ Edit via **Preferences → Package Settings → SettingsUI → Settings**.
 
 Sublime Text 4 (build 4000+).
 
+## Development
+
+### Running tests
+
+Pure-logic tests (`tests/`) — no Sublime Text dependency:
+
+```
+uv run pytest tests/ -v
+```
+
+Real-ST regression tests (`tests_st/`) run against real, headless Sublime Text via
+Docker — no local Sublime Text install or license required. This tier primarily covers
+window-lifecycle regressions (open/close crashes) that a hand-rolled `sublime` model
+can't faithfully reproduce; it's a smoke suite, not a replacement for `tests/`, and
+every test in it drives the plugin through real commands and real view/window
+mutations rather than calling listener classes directly:
+
+```
+./tools/run-st-tests-docker.sh
+```
+
+Run a single file with `./tools/run-st-tests-docker.sh --file tests_st/<name>.py`.
+The first run clones [`SublimeText/UnitTesting`](https://github.com/SublimeText/UnitTesting)
+into a gitignored `.cache/` directory and builds a local Docker image; later runs reuse
+a cached Docker volume and are much faster. CI runs the same `tests_st/` suite via
+UnitTesting's official GitHub Action instead of Docker — both are entry points to
+identical test content.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).

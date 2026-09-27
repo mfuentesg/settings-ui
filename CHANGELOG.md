@@ -1,5 +1,20 @@
 # Changelog
 
+## [Unreleased]
+
+### Development
+- Added `tests_st/test_new_view_guard.py`, a real-Sublime-Text regression test (via
+  SublimeText/UnitTesting) for the first-run flash-then-crash — behavior a hand-rolled
+  `sublime` fake can't faithfully validate. It drives the plugin's real, already-registered
+  event listener through real view/window operations rather than instantiating the
+  listener class directly (the settings-ui#3 close-deadlock regression already has this
+  kind of coverage via the existing `tests_st/test_window_lifecycle.py`)
+- Added `tools/run-st-tests-docker.sh` so `tests_st/` can be run locally via Docker,
+  without a local Sublime Text install or license, matching what CI runs headlessly
+- Pinned the `st-headless` CI job's `package-name` to `SettingsUI`, matching the actual
+  package name (`Main.sublime-menu`/README/Package Control), instead of the name
+  UnitTesting would otherwise derive from the GitHub repo name (`settings-ui`)
+
 ## [0.5.3] - 2026-09-27
 
 ### Fixed
