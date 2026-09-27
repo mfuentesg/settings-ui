@@ -1,5 +1,14 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+- Replaced the three per-platform `Default (${platform}) (Example).sublime-keymap`
+  files with a single `Example.sublime-keymap` listing both bindings, per
+  Package Control reviewer feedback on PR #9459. `Main.sublime-menu`'s
+  `Key Bindings` entry no longer references `${platform}` in `base_file`,
+  which the reviewer's automated check couldn't resolve to an existing file
+
 ## [0.5.2] - 2026-09-18
 
 ### Fixed
