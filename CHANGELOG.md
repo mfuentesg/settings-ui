@@ -1,6 +1,13 @@
 # Changelog
 
-## [Unreleased]
+## [0.5.4] - 2026-09-27
+
+### Fixed
+- Commands run from a `cmd:` link in the panel (native theme/color scheme pickers)
+  now run in the Settings UI window itself instead of an unrelated editing window
+- Quick panels now call `hide_overlay` before opening another one, so switching
+  directly between e.g. the Light and Dark color scheme pickers works without
+  having to close the current one first (via `escape`)
 
 ### Development
 - Added `tests_st/test_new_view_guard.py`, a real-Sublime-Text regression test (via
