@@ -1,0 +1,7 @@
+[
+    // macOS
+    { "keys": ["super+,"], "command": "settings_ui_open" },
+
+    // Windows / Linux
+    { "keys": ["ctrl+,"], "command": "settings_ui_open" }
+]
