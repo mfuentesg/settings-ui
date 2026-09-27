@@ -137,17 +137,18 @@ def list_color_schemes() -> list:
 
 
 # ---------------------------------------------------------------------------
-# Lazy render helpers (avoids circular import with panel)
+# Lazy render helper (avoids circular import with panel)
 # ---------------------------------------------------------------------------
 
-def _refresh_content() -> None:
-    """Re-render just the content pane (cheap, avoids full nav rebuild)."""
-    from . import panel
-    panel.render_content()
-
-
 def _refresh_all() -> None:
-    """Re-render both panes (needed when the filter / category changes)."""
+    """
+    Re-render both panes.
+
+    Every pref mutation goes through this (not just filter/category changes):
+    PhantomSet.update() only repaints phantoms whose HTML text changed, so a
+    color scheme/theme change needs both panes rebuilt to pick up the new
+    colors everywhere, not just in the row that was edited.
+    """
     from . import panel
     panel.render_nav()
     panel.render_content()
@@ -175,7 +176,7 @@ def open_edit(key: str) -> None:
             sublime.status_message("Settings UI: invalid value (%s)" % ex)
             return
         prefs.set_pref(key, new)
-        _refresh_content()
+        _refresh_all()
 
     sublime.active_window().show_input_panel(
         "Set %s" % key, initial, on_done, None, None
@@ -217,7 +218,7 @@ def open_resource_picker(key: str) -> None:
         if idx == -1:
             return
         prefs.set_pref(key, items[idx][1])
-        _refresh_content()
+        _refresh_all()
 
     sublime.active_window().show_quick_panel(labels, on_done, 0, selected, None)
 
@@ -283,6 +284,6 @@ def _show_list_picker(key: str, items: list) -> None:
         if idx == -1:
             return
         prefs.set_pref(key, items[idx][1])
-        _refresh_content()
+        _refresh_all()
 
     sublime.active_window().show_quick_panel(labels, on_done, 0, selected, None)
