@@ -1,5 +1,20 @@
 # Changelog
 
+## [Unreleased]
+
+### Fixed
+- Panel text no longer shows stale colors after changing a setting (e.g. right
+  after picking a new color scheme/theme, or any other row's phantom keeping
+  whatever colors it last happened to redraw with). `render_nav()`/
+  `render_content()` now always rebuild their `PhantomSet` from scratch instead
+  of reusing one across renders, since `PhantomSet.update()` skips repainting
+  any phantom whose HTML text is unchanged
+- The nav sidebar is now refreshed alongside the content pane on every pref
+  mutation (picker callbacks, toggle/reset/enum/step links, "Restore all
+  defaults", and prefs changes made outside the UI) — previously only the
+  content pane re-rendered, so the nav pane could go stale until the next
+  category click (settings-ui#7)
+
 ## [0.5.4] - 2026-09-27
 
 ### Fixed

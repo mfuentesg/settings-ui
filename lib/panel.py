@@ -97,11 +97,13 @@ def render_nav() -> None:
     if not win:
         return
     view = get_nav_view(win)
-    pset = _phantom_sets.get(view.id())
-    if pset is None:
-        view.erase_phantoms(PANEL_PHANTOM_NAV)
-        pset = sublime.PhantomSet(view, PANEL_PHANTOM_NAV)
-        _phantom_sets[view.id()] = pset
+    # Always rebuild the PhantomSet from scratch: PhantomSet.update() skips
+    # repainting any phantom whose HTML text is unchanged, which leaves it
+    # showing colors resolved from a stale color scheme/theme after most
+    # setting changes (only the changed row's markup differs).
+    view.erase_phantoms(PANEL_PHANTOM_NAV)
+    pset = sublime.PhantomSet(view, PANEL_PHANTOM_NAV)
+    _phantom_sets[view.id()] = pset
 
     vp = view.viewport_position()
     html = renderer.build_nav_html(schema.SECTIONS, state._filter, state._category)
@@ -120,11 +122,10 @@ def render_content() -> None:
     if not win:
         return
     view = get_content_view(win)
-    pset = _phantom_sets.get(view.id())
-    if pset is None:
-        view.erase_phantoms(PANEL_PHANTOM_CONTENT)
-        pset = sublime.PhantomSet(view, PANEL_PHANTOM_CONTENT)
-        _phantom_sets[view.id()] = pset
+    # See render_nav() above: always rebuild so stale colors can't linger.
+    view.erase_phantoms(PANEL_PHANTOM_CONTENT)
+    pset = sublime.PhantomSet(view, PANEL_PHANTOM_CONTENT)
+    _phantom_sets[view.id()] = pset
 
     vp = view.viewport_position()
     phantoms = renderer.build_content_phantoms(
@@ -225,6 +226,7 @@ def _do_scheduled_render() -> None:
     global _render_scheduled
     _render_scheduled = False
     if get_active_settings_window() is not None:
+        render_nav()
         render_content()
 
 
@@ -261,6 +263,7 @@ def on_nav(href: str) -> None:
     # ---- Global actions --------------------------------------------------
     if href == "action:reset_all":
         prefs.reset_all()
+        render_nav()
         render_content()
         return
     if href == "action:search":
@@ -324,6 +327,7 @@ def on_nav(href: str) -> None:
         new = round(new, 4) if en.get("is_float") else int(new)
         prefs.set_pref(key, new)
 
+    render_nav()
     render_content()
 
 

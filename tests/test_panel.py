@@ -110,6 +110,120 @@ class TestOnNav:
 
         assert events == ["hide_overlay", "picker:dark_color_scheme"]
 
+    def test_reset_all_rerenders_both_panes(self, monkeypatch):
+        # Regression: reset_all used to only re-render the content pane,
+        # leaving the nav sidebar showing stale colors (settings-ui#7).
+        w = _fresh_window()
+        content = w.new_file()
+        content.settings().set(panel.CONTENT_MARK, True)
+        calls = []
+        monkeypatch.setattr(panel, "render_nav", lambda: calls.append("nav"))
+        monkeypatch.setattr(panel, "render_content", lambda: calls.append("content"))
+        monkeypatch.setattr(panel.prefs, "reset_all", lambda: None)
+
+        panel.on_nav("action:reset_all")
+
+        assert calls == ["nav", "content"]
+
+    def test_pref_mutation_rerenders_both_panes(self, monkeypatch):
+        # Regression: toggling/resetting/stepping a setting used to only
+        # re-render the content pane (settings-ui#7).
+        w = _fresh_window()
+        content = w.new_file()
+        content.settings().set(panel.CONTENT_MARK, True)
+        calls = []
+        monkeypatch.setattr(panel, "render_nav", lambda: calls.append("nav"))
+        monkeypatch.setattr(panel, "render_content", lambda: calls.append("content"))
+
+        panel.on_nav("reset:some_setting_key")
+
+        assert calls == ["nav", "content"]
+
+
+class TestScheduledRender:
+    def setup_method(self):
+        _reset()
+
+    def test_rerenders_both_panes(self, monkeypatch):
+        # Regression: a prefs change from outside the UI (e.g. editing the
+        # raw JSON file) used to only re-render the content pane, leaving
+        # the nav sidebar stale (settings-ui#7).
+        w = _fresh_window()
+        content = w.new_file()
+        content.settings().set(panel.CONTENT_MARK, True)
+        calls = []
+        monkeypatch.setattr(panel, "render_nav", lambda: calls.append("nav"))
+        monkeypatch.setattr(panel, "render_content", lambda: calls.append("content"))
+
+        panel._do_scheduled_render()
+
+        assert calls == ["nav", "content"]
+
+    def test_does_nothing_without_a_settings_window(self, monkeypatch):
+        calls = []
+        monkeypatch.setattr(panel, "render_nav", lambda: calls.append("nav"))
+        monkeypatch.setattr(panel, "render_content", lambda: calls.append("content"))
+
+        panel._do_scheduled_render()
+
+        assert calls == []
+
+
+class TestPhantomSetRecreatedEveryRender:
+    """
+    Regression coverage for settings-ui#7: sublime.PhantomSet.update() skips
+    repainting any phantom whose HTML text is byte-identical to what's
+    already displayed, which left most rows showing colors resolved from a
+    stale color scheme/theme after a setting change. render_nav()/
+    render_content() must build a brand new PhantomSet every call (never
+    reuse the previous one) so every phantom is always forced to repaint.
+    """
+    def setup_method(self):
+        _reset()
+
+    def test_render_nav_recreates_phantom_set_every_call(self, monkeypatch):
+        w = _fresh_window()
+        content = w.new_file()
+        content.settings().set(panel.CONTENT_MARK, True)
+        monkeypatch.setattr(panel.renderer, "build_nav_html", lambda *a, **k: "<div/>")
+
+        panel.render_nav()
+        nav_view = panel.get_nav_view(w)
+        first = panel._phantom_sets[nav_view.id()]
+
+        panel.render_nav()
+        second = panel._phantom_sets[nav_view.id()]
+
+        assert first is not second
+
+    def test_render_content_recreates_phantom_set_every_call(self, monkeypatch):
+        w = _fresh_window()
+        content = w.new_file()
+        content.settings().set(panel.CONTENT_MARK, True)
+        monkeypatch.setattr(panel.renderer, "build_content_phantoms", lambda *a, **k: [])
+
+        panel.render_content()
+        first = panel._phantom_sets[content.id()]
+
+        panel.render_content()
+        second = panel._phantom_sets[content.id()]
+
+        assert first is not second
+
+    def test_render_nav_erases_phantoms_every_call(self, monkeypatch):
+        w = _fresh_window()
+        content = w.new_file()
+        content.settings().set(panel.CONTENT_MARK, True)
+        monkeypatch.setattr(panel.renderer, "build_nav_html", lambda *a, **k: "<div/>")
+        erase_calls = []
+        nav_view = panel.get_nav_view(w)
+        monkeypatch.setattr(nav_view, "erase_phantoms", lambda key: erase_calls.append(key))
+
+        panel.render_nav()
+        panel.render_nav()
+
+        assert erase_calls == [panel.PANEL_PHANTOM_NAV, panel.PANEL_PHANTOM_NAV]
+
 
 class TestResetModuleState:
     def setup_method(self):
