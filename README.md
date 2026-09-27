@@ -49,7 +49,7 @@ Clone this repo into your Packages directory:
 
 Open the command palette and run **Preferences: Settings UI**.
 
-A keyboard shortcut is included as an example keymap (not active by default). To enable it, copy the binding from the example keymap file into your own keymap:
+A keyboard shortcut is included as an example keymap (not active by default). To enable it, copy the binding for your platform from `Example.sublime-keymap` (**Preferences → Package Settings → SettingsUI → Key Bindings**) into your own keymap:
 
 | Platform | Shortcut |
 |----------|----------|
